@@ -1,0 +1,22 @@
+# Salesforce CLI - configuración local de conexión a la org (nunca se sube)
+.sf/
+.sfdx/
+
+# Claude Code - configuración/credenciales locales (los comandos de Spec Kit en
+# .claude/skills SÍ se suben; esto excluye solo settings personales si aparecen)
+.claude/settings.local.json
+.claude/.credentials.json
+
+# Salesforce - metadata generada o de build que no debe versionarse
+.localdevserver/
+**/.sfdx/
+**/.localdevserver
+
+# Node (si más adelante instalás dependencias)
+node_modules/
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
