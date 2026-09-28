@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPlannerBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Cotiza el monto de una Oportunidad en otra moneda con el tipo de cambio del día y guarda cada cotización en el historial (CurrencyQuote__c). Reutiliza la misma lógica que el endpoint REST del Cotizador.</description>
+    <localTopicLinks>
+        <genAiPluginName>agent_router_16jg7000001B9Qn</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>ambiguous_question_16jg7000001B9Qn</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>escalation_16jg7000001B9Qn</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>off_topic_16jg7000001B9Qn</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>opportunity_quote_16jg7000001B9Qn</genAiPluginName>
+    </localTopicLinks>
+    <localTopics>
+        <fullName>opportunity_quote_16jg7000001B9Qn</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Cotiza el monto de una Oportunidad de Salesforce en otra moneda con el tipo de cambio del día. Usar cuando el usuario pide cotizar, convertir o saber cuánto vale una Oportunidad en otra moneda.</description>
+        <developerName>opportunity_quote_16jg7000001B9Qn</developerName>
+        <genAiPluginInstructions>
+            <description>Sos un asistente interno de Salesforce que cotiza el monto de Oportunidades en otra moneda con el tipo de cambio del día. Respondé siempre en español, de forma breve y clara.</description>
+            <developerName>instruction0_179g7000001gUYz</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179g7000001gUYz</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>quote_opportunity_179g7000001gUYz</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>quote_opportunity_179g7000001gUYz</fullName>
+            <description>Cotiza el monto de una Oportunidad en otra moneda con el tipo de cambio del día y guarda la cotización en el historial.</description>
+            <developerName>quote_opportunity_179g7000001gUYz</developerName>
+            <invocationTarget>OpportunityQuoteAction</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>quote_opportunity</localDeveloperName>
+            <masterLabel>Cotizar Oportunidad en otra moneda</masterLabel>
+            <progressIndicatorMessage>Consultando el tipo de cambio del día...</progressIndicatorMessage>
+        </localActions>
+        <localDeveloperName>opportunity_quote</localDeveloperName>
+        <masterLabel>Cotización de Oportunidades</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>off_topic_16jg7000001B9Qn</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Redirect conversation to relevant topics when user request goes off-topic</description>
+        <developerName>off_topic_16jg7000001B9Qn</developerName>
+        <genAiPluginInstructions>
+            <description>Sos un asistente interno de Salesforce que cotiza el monto de Oportunidades en otra moneda con el tipo de cambio del día. Respondé siempre en español, de forma breve y clara.</description>
+            <developerName>instruction0_179g7000001gUZ2</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179g7000001gUZ2</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>off_topic</localDeveloperName>
+        <masterLabel>Off Topic</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>escalation_16jg7000001B9Qn</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Handles requests from users who want to transfer or escalate their conversation to a live human agent.</description>
+        <developerName>escalation_16jg7000001B9Qn</developerName>
+        <genAiPluginInstructions>
+            <description>Sos un asistente interno de Salesforce que cotiza el monto de Oportunidades en otra moneda con el tipo de cambio del día. Respondé siempre en español, de forma breve y clara.</description>
+            <developerName>instruction0_179g7000001gUZ3</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179g7000001gUZ3</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>escalation</localDeveloperName>
+        <masterLabel>Escalation</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>agent_router_16jg7000001B9Qn</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Welcome the user and determine the appropriate subagent based on user input</description>
+        <developerName>agent_router_16jg7000001B9Qn</developerName>
+        <genAiPluginInstructions>
+            <description>Sos un asistente interno de Salesforce que cotiza el monto de Oportunidades en otra moneda con el tipo de cambio del día. Respondé siempre en español, de forma breve y clara.
+
+{{state.AgentScriptInternal_agent_instructions}}</description>
+            <developerName>instruction0_179g7000001gUZ0</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179g7000001gUZ0</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>agent_router</localDeveloperName>
+        <masterLabel>Agent Router</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>ambiguous_question_16jg7000001B9Qn</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Redirect conversation to relevant topics when user request is too ambiguous</description>
+        <developerName>ambiguous_question_16jg7000001B9Qn</developerName>
+        <genAiPluginInstructions>
+            <description>Sos un asistente interno de Salesforce que cotiza el monto de Oportunidades en otra moneda con el tipo de cambio del día. Respondé siempre en español, de forma breve y clara.</description>
+            <developerName>instruction0_179g7000001gUZ1</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179g7000001gUZ1</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>ambiguous_question</localDeveloperName>
+        <masterLabel>Ambiguous Question</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <masterLabel>Cotizar Oportunidad en otra moneda</masterLabel>
+    <plannerType>Atlas__ConcurrentMultiAgentOrchestration</plannerType>
+</GenAiPlannerBundle>

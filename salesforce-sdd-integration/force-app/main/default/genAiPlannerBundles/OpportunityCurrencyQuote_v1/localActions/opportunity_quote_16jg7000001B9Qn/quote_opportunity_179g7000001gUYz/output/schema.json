@@ -1,0 +1,78 @@
+{
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "convertedAmount" : {
+      "title" : "Monto convertido",
+      "description" : "Monto original por el tipo de cambio, truncado a 2 decimales.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "errorCode" : {
+      "title" : "Código de error",
+      "description" : "Código del error (solo si isSuccess es false).",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "exchangeRate" : {
+      "title" : "Tipo de cambio",
+      "description" : "Tipo de cambio aplicado (1 moneda original = X moneda destino).",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "isSuccess" : {
+      "title" : "Éxito",
+      "description" : "true si la cotización se realizó; false si hubo un error.",
+      "lightning:type" : "lightning__booleanType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "message" : {
+      "title" : "Mensaje",
+      "description" : "Resumen de la cotización o motivo del error, en lenguaje claro.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "originalAmount" : {
+      "title" : "Monto original",
+      "description" : "Monto de la Oportunidad en su moneda original.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "originalCurrency" : {
+      "title" : "Moneda original",
+      "description" : "Código de la moneda de la Oportunidad.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "quotedAt" : {
+      "title" : "Fecha/hora de cotización",
+      "description" : "Momento de la cotización en formato ISO 8601 UTC.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "targetCurrency" : {
+      "title" : "Moneda destino",
+      "description" : "Código de la moneda a la que se convirtió.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

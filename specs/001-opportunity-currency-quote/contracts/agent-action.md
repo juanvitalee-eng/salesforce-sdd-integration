@@ -23,7 +23,25 @@ Reutiliza `OpportunityQuoteService` con canal `Agent` (FR-015, regla 14).
 
 La acción **nunca** lanza excepciones hacia el agente: los errores vuelven como `isSuccess = false`.
 
-## Configuración en Agentforce Builder
+## Implementación real (2026-09-28)
+
+El agente se creó con el **nuevo Agentforce Builder (Agent Script)**, no con Topics/Actions clásicos:
+
+- Fuente versionada: `force-app/main/default/aiAuthoringBundles/OpportunityCurrencyQuote/OpportunityCurrencyQuote.agent`
+  (subagent `opportunity_quote` + acción `quote_opportunity` con `target: "apex://OpportunityQuoteAction"`).
+- Flujo: editar el `.agent` → `sf agent validate authoring-bundle` → `sf agent publish authoring-bundle`
+  → `sf agent activate`. El publish genera y trae al repo `bots/` y `genAiPlannerBundles/`.
+- Es un agente de tipo **Service Agent**: corre como su propio usuario (`opportunitycurrencyquote@...ext`,
+  perfil Einstein Agent User), que tiene asignado `OpportunityQuoteUser`. Por eso la visibilidad de
+  Oportunidades es la de ese usuario, no la del usuario interno que conversa (ver "Desvío" abajo).
+- Permiso extra descubierto: para usar la External Credential, el usuario necesita **Read sobre
+  `UserExternalCredential`** (agregado a `OpportunityQuoteUser`).
+
+**Desvío respecto de la spec**: el supuesto "la visibilidad respeta los permisos del usuario interno"
+(FR-005 para el canal agente) no se cumple con un Service Agent. Para cumplirlo habría que usar un
+agente de empleados (Employee Agent), que corre con el usuario que conversa.
+
+## Configuración en Agentforce Builder (diseño original)
 
 - **Agent Action**: tipo Apex → `OpportunityQuoteAction`. Marcar ambas entradas como "Require Input"
   y las salidas como "Show in conversation".

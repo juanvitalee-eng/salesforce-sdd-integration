@@ -65,7 +65,14 @@ Contrato completo: [contracts/opportunity-quotes-api.md](./contracts/opportunity
 
 ## 5. Canal agente (Historia 2)
 
-Configurar la acción y el topic según [contracts/agent-action.md](./contracts/agent-action.md).
+Configurar el agente según [contracts/agent-action.md](./contracts/agent-action.md) (Agent Script) y
+asignar `OpportunityQuoteUser` al usuario del agente. Se puede probar sin la UI:
+
+```bash
+sf agent preview start --api-name OpportunityCurrencyQuote --target-org sdd-dev --json   # devuelve sessionId
+sf agent preview send --api-name OpportunityCurrencyQuote --session-id <ID> --utterance "cotizame la oportunidad <OPP_USD> en EUR" --target-org sdd-dev
+sf agent preview end --api-name OpportunityCurrencyQuote --session-id <ID> --target-org sdd-dev
+```
 Después, en el panel de Agentforce:
 
 | # | Mensaje | Esperado |
