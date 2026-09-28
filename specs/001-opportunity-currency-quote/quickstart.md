@@ -16,6 +16,7 @@ Guía para probar de punta a punta que la feature funciona. Los comandos se corr
 sf project deploy start --source-dir force-app --target-org sdd-dev
 sf org assign permset --name OpportunityQuoteUser --target-org sdd-dev
 sf org assign permset --name CurrencyQuoteAuditor --target-org sdd-dev
+sf org assign permset --name ErrorLogAdmin --target-org sdd-dev   # solo administradores
 ```
 
 ## 2. Tests automáticos (constitución, regla 13)

@@ -1,5 +1,31 @@
 # Salesforce DX Project
 
+## Cotizador de Oportunidades
+
+Cotiza el monto de una Oportunidad en otra moneda con el tipo de cambio del día (proveedor
+[Frankfurter](https://frankfurter.dev)) y guarda cada cotización en `CurrencyQuote__c`, sin modificar
+la Oportunidad. Tiene dos canales que comparten la misma lógica (`OpportunityQuoteService`):
+
+- **Sistema externo (REST)**: `POST /services/apexrest/v1/opportunity-quotes`
+- **Agente de Agentforce**: acción invocable `OpportunityQuoteAction` ("Cotizar Oportunidad en otra moneda")
+
+Ejemplo:
+
+```bash
+curl -X POST "$INSTANCE_URL/services/apexrest/v1/opportunity-quotes" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" -H "Content-Type: application/json" \
+  -d '{"requests":[{"opportunityId":"006XXXXXXXXXXXXXXX","targetCurrency":"EUR"}]}'
+```
+
+Permission sets: `OpportunityQuoteUser` (integración y usuarios del agente), `CurrencyQuoteAuditor`
+(historial en solo lectura) y `ErrorLogAdmin` (administradores, Log de Errores).
+
+Especificación, contrato y guía de validación:
+[`specs/001-opportunity-currency-quote/`](../specs/001-opportunity-currency-quote/) — ver
+[quickstart.md](../specs/001-opportunity-currency-quote/quickstart.md).
+
+---
+
 Salesforce DX is a development approach that brings source-driven development, team collaboration, and continuous integration to the Salesforce Platform. Instead of working directly in an org through a web browser, you work with metadata as source files in a local DX project, track changes in version control, and deploy through automated processes.
 
 This project template gets you started with the tools and structure you need to build Salesforce applications using source control, scratch orgs, and the Salesforce CLI.

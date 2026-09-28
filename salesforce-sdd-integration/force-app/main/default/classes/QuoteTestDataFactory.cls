@@ -36,8 +36,20 @@ public with sharing class QuoteTestDataFactory {
     /**
      * Crea e inserta un usuario de prueba con el perfil indicado y le asigna los permission sets.
      * Se usa con System.runAs para probar qué puede y qué no puede hacer cada tipo de usuario.
+     *
+     * Los usuarios y sus permisos son objetos "de configuración" (setup). Salesforce no permite
+     * mezclarlos con datos de negocio en la misma transacción (error MIXED_DML_OPERATION), así que
+     * los creamos dentro de System.runAs, que en los tests los aísla en su propio contexto.
      */
     public static User createUser(String profileName, List<String> permissionSetNames) {
+        User created;
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            created = insertUser(profileName, permissionSetNames);
+        }
+        return created;
+    }
+
+    private static User insertUser(String profileName, List<String> permissionSetNames) {
         Profile profile = [SELECT Id FROM Profile WHERE Name = :profileName LIMIT 1];
         String uniqueKey = String.valueOf(Crypto.getRandomInteger()).replace('-', '');
         User user = new User(

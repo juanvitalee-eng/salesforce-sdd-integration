@@ -25,8 +25,53 @@
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
+        <members>CurrencyQuote__c</members>
+        <members>ErrorLog__c</members>
+        <members>OpportunityQuoteSetting__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>OpportunityQuoteSetting.Default</members>
+        <name>CustomMetadata</name>
+    </types>
+    <types>
+        <members>FrankfurterNoAuth</members>
+        <name>ExternalCredential</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiFunction</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiPlannerBundle</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiPlugin</name>
+    </types>
+    <types>
+        <members>CurrencyQuote__c-Cotización de Moneda Layout</members>
+        <members>Opportunity-Opportunity Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
         <members>*</members>
         <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>FrankfurterApi</members>
+        <name>NamedCredential</name>
+    </types>
+    <types>
+        <members>CurrencyQuoteAuditor</members>
+        <members>ErrorLogAdmin</members>
+        <members>OpportunityQuoteUser</members>
+        <name>PermissionSet</name>
     </types>
     <types>
         <members>*</members>

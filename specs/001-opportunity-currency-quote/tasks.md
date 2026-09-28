@@ -180,18 +180,18 @@ separado.
 
 ### Implementation for User Story 2
 
-- [ ] T034 [US2] Crear `OpportunityQuoteAction` en `FA/classes/OpportunityQuoteAction.cls` según [contracts/agent-action.md](./contracts/agent-action.md):
+- [X] T034 [US2] Crear `OpportunityQuoteAction` en `FA/classes/OpportunityQuoteAction.cls` según [contracts/agent-action.md](./contracts/agent-action.md):
   - `@InvocableMethod(label='Cotizar Oportunidad en otra moneda' description='…en español…')` que recibe `List<Request>` (`opportunityId`, `targetCurrency`, ambas `@InvocableVariable(required=true)` con label y descripción en español) y devuelve `List<Response>` (`isSuccess`, `message`, `errorCode`, `originalAmount`, `originalCurrency`, `targetCurrency`, `exchangeRate`, `convertedAmount`, `quotedAt` como String ISO 8601 UTC).
   - Convierte los Requests a `QuoteModels.QuoteRequest` y llama **una vez** a `OpportunityQuoteService.quote(..., CHANNEL_AGENT)` (regla 14: sin lógica duplicada).
   - Si sale bien: `message` es un resumen en español con los 6 datos. Si hay `QuoteException`: devuelve `isSuccess = false` con el mensaje de negocio y el código **para cada** Request, y nunca lanza la excepción
-- [ ] T035 [US2] Agregar `classAccesses` para `OpportunityQuoteAction` en `FA/permissionsets/OpportunityQuoteUser.permissionset-meta.xml` (depende de T034)
-- [ ] T036 [US2] Crear `OpportunityQuoteActionTest` en `FA/classes/OpportunityQuoteActionTest.cls`, siguiendo "Tests con callouts". Debe cubrir:
+- [X] T035 [US2] Agregar `classAccesses` para `OpportunityQuoteAction` en `FA/permissionsets/OpportunityQuoteUser.permissionset-meta.xml` (depende de T034)
+- [X] T036 [US2] Crear `OpportunityQuoteActionTest` en `FA/classes/OpportunityQuoteActionTest.cls`, siguiendo "Tests con callouts". Debe cubrir:
   - Éxito con los 6 datos y un `message` que los contiene.
   - Id inexistente → `isSuccess = false` y el mismo mensaje que devolvería el Service.
   - Proveedor caído → `isSuccess = false` sin valores numéricos.
   - Los valores son idénticos a los del Service para el mismo mock (SC-006).
   - La `CurrencyQuote__c` creada tiene `Channel__c = 'Agent'` y el `ErrorLog__c` de un rechazo tiene `Channel__c = 'Agent'` (depende de T034)
-- [ ] T037 [US2] Desplegar y correr `sf apex run test --tests OpportunityQuoteActionTest --code-coverage --wait 10 --target-org sdd-dev`
+- [X] T037 [US2] Desplegar y correr `sf apex run test --tests OpportunityQuoteActionTest --code-coverage --wait 10 --target-org sdd-dev`
 - [ ] T038 [US2] **(Manual en la UI de Salesforce)** En Agentforce Builder, crear la Agent Action de tipo Apex sobre `OpportunityQuoteAction` y el Topic "Cotización de Oportunidades" con la descripción y las 4 instrucciones de [contracts/agent-action.md](./contracts/agent-action.md). Marcar las entradas como "Require Input" y las salidas como "Show in conversation", agregar el topic al Agentforce Employee Agent y activarlo. Asignar `OpportunityQuoteUser` a los usuarios internos que van a usar el agente
 - [ ] T039 [US2] Recuperar la metadata del agente al repo: `sf project retrieve start --metadata GenAiFunction GenAiPlugin GenAiPlannerBundle --target-org sdd-dev`. Queda en `FA/genAiFunctions/`, `FA/genAiPlugins/` y `FA/genAiPlannerBundles/`. Revisar que solo se agreguen la acción, el topic y el agente que usamos, y descartar lo demás (depende de T038)
 - [ ] T040 [US2] Validar los casos 5.1 a 5.3 de [quickstart.md](./quickstart.md) en el panel de Agentforce, comparando 5.1 con una llamada curl hecha en el mismo momento
@@ -208,17 +208,17 @@ separado.
 
 ### Implementation for User Story 3
 
-- [ ] T041 [P] [US3] Crear el permission set `CurrencyQuoteAuditor` (Label "Cotizaciones de Moneda - Auditoría", descripción en español) en `FA/permissionsets/CurrencyQuoteAuditor.permissionset-meta.xml`, con solo Read sobre `CurrencyQuote__c` (FR-020)
-- [ ] T042 [P] [US3] Recuperar el layout de Oportunidad (`sf project retrieve start --metadata "Layout:Opportunity-Opportunity Layout" --target-org sdd-dev`) y agregar la related list `CurrencyQuotes` con las columnas Name, `TargetCurrency__c`, `ExchangeRate__c`, `ConvertedAmount__c`, `QuotedAt__c` y `Channel__c` en `FA/layouts/Opportunity-Opportunity Layout.layout-meta.xml`. Crear además `FA/layouts/CurrencyQuote__c-Cotización de Moneda Layout.layout-meta.xml` con todos los campos en solo lectura
+- [X] T041 [P] [US3] Crear el permission set `CurrencyQuoteAuditor` (Label "Cotizaciones de Moneda - Auditoría", descripción en español) en `FA/permissionsets/CurrencyQuoteAuditor.permissionset-meta.xml`, con solo Read sobre `CurrencyQuote__c` (FR-020)
+- [X] T042 [P] [US3] Recuperar el layout de Oportunidad (`sf project retrieve start --metadata "Layout:Opportunity-Opportunity Layout" --target-org sdd-dev`) y agregar la related list `CurrencyQuotes` con las columnas Name, `TargetCurrency__c`, `ExchangeRate__c`, `ConvertedAmount__c`, `QuotedAt__c` y `Channel__c` en `FA/layouts/Opportunity-Opportunity Layout.layout-meta.xml`. Crear además `FA/layouts/CurrencyQuote__c-Cotización de Moneda Layout.layout-meta.xml` con todos los campos en solo lectura
 
 ### Tests for User Story 3
 
-- [ ] T043 [US3] Crear `CurrencyQuoteAuditTest` en `FA/classes/CurrencyQuoteAuditTest.cls`, siguiendo "Tests con callouts". Debe cubrir:
+- [X] T043 [US3] Crear `CurrencyQuoteAuditTest` en `FA/classes/CurrencyQuoteAuditTest.cls`, siguiendo "Tests con callouts". Debe cubrir:
   - 3 cotizaciones de la misma Oportunidad → 3 registros independientes.
   - Borrar una Oportunidad con cotizaciones → `DmlException` (FR-020a).
   - Un usuario con solo `CurrencyQuoteAuditor` (`System.runAs`) puede leer las cotizaciones y **no** puede actualizarlas ni borrarlas.
   - Ese usuario no puede leer `ErrorLog__c` (FR-024) (depende de T041)
-- [ ] T044 [US3] Desplegar, correr `sf apex run test --tests CurrencyQuoteAuditTest --code-coverage --wait 10 --target-org sdd-dev` y validar [quickstart.md](./quickstart.md) §6: consultas SOQL, intento de borrado desde la UI y vista del auditor
+- [X] T044 [US3] Desplegar, correr `sf apex run test --tests CurrencyQuoteAuditTest --code-coverage --wait 10 --target-org sdd-dev` y validar [quickstart.md](./quickstart.md) §6: consultas SOQL, intento de borrado desde la UI y vista del auditor
 
 **Checkpoint**: las tres historias funcionan y se pueden probar por separado.
 
@@ -226,12 +226,12 @@ separado.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T045 Correr la suite completa con cobertura: `sf apex run test --code-coverage --result-format human --wait 15 --target-org sdd-dev --tests OpportunityQuoteServiceTest OpportunityQuoteResourceTest OpportunityQuoteActionTest ExchangeRateClientTest ErrorLoggerTest CurrencyQuoteAuditTest`. Cada clase del feature debe tener **≥ 85%** de cobertura (regla 13). Si alguna no llega, agregar tests
-- [ ] T046 [P] Revisar todas las clases de `FA/classes/` contra el checklist de [quickstart.md](./quickstart.md): `with sharing`, comentarios para no programadores, sin SOQL/DML en loops, callouts antes del DML, sin hardcodeo. Corregir lo que falte
-- [ ] T047 [P] Revisar que todo objeto y campo de `FA/objects/` tenga Label y `<description>` en español (reglas 1 y 2)
-- [ ] T048 [P] Actualizar `salesforce-sdd-integration/manifest/package.xml` con los tipos nuevos: ApexClass, CustomObject, CustomField, CustomMetadata, ExternalCredential, NamedCredential, PermissionSet, Layout, GenAiFunction, GenAiPlugin y GenAiPlannerBundle
-- [ ] T049 [P] Agregar a `salesforce-sdd-integration/README.md` una sección "Cotizador de Oportunidades" con el endpoint, un ejemplo de curl y un link a [quickstart.md](./quickstart.md)
-- [ ] T050 Ejecutar [quickstart.md](./quickstart.md) completo de punta a punta y medir el tiempo de respuesta de 10 llamadas de un pedido (SC-001: p95 < 3 s) y de una llamada con 200 pedidos (SC-008)
+- [X] T045 Correr la suite completa con cobertura: `sf apex run test --code-coverage --result-format human --wait 15 --target-org sdd-dev --tests OpportunityQuoteServiceTest OpportunityQuoteResourceTest OpportunityQuoteActionTest ExchangeRateClientTest ErrorLoggerTest CurrencyQuoteAuditTest`. Cada clase del feature debe tener **≥ 85%** de cobertura (regla 13). Si alguna no llega, agregar tests
+- [X] T046 [P] Revisar todas las clases de `FA/classes/` contra el checklist de [quickstart.md](./quickstart.md): `with sharing`, comentarios para no programadores, sin SOQL/DML en loops, callouts antes del DML, sin hardcodeo. Corregir lo que falte
+- [X] T047 [P] Revisar que todo objeto y campo de `FA/objects/` tenga Label y `<description>` en español (reglas 1 y 2)
+- [X] T048 [P] Actualizar `salesforce-sdd-integration/manifest/package.xml` con los tipos nuevos: ApexClass, CustomObject, CustomField, CustomMetadata, ExternalCredential, NamedCredential, PermissionSet, Layout, GenAiFunction, GenAiPlugin y GenAiPlannerBundle
+- [X] T049 [P] Agregar a `salesforce-sdd-integration/README.md` una sección "Cotizador de Oportunidades" con el endpoint, un ejemplo de curl y un link a [quickstart.md](./quickstart.md)
+- [X] T050 Ejecutar [quickstart.md](./quickstart.md) completo de punta a punta y medir el tiempo de respuesta de 10 llamadas de un pedido (SC-001: p95 < 3 s) y de una llamada con 200 pedidos (SC-008)
 
 ---
 
