@@ -1,0 +1,112 @@
+openapi: 3.0.3
+info:
+  title: Cotizador de Oportunidades
+  version: "1.0"
+  description: >
+    Cotiza el monto de Oportunidades de Salesforce en otra moneda usando el tipo de cambio del día
+    (Frankfurter). Procesamiento "todo o nada": si un pedido falla, se rechaza la llamada entera.
+servers:
+  - url: https://{instance}.my.salesforce.com/services/apexrest
+    variables:
+      instance:
+        default: your-domain
+security:
+  - bearerAuth: []
+paths:
+  /v1/opportunity-quotes:
+    post:
+      summary: Cotizar una o más Oportunidades
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchRequest"
+      responses:
+        "200":
+          description: Todos los pedidos se cotizaron; un resultado por pedido, en el mismo orden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchResponse"
+        "400":
+          description: Pedido inválido (se informa el de menor posición). No se crea ninguna cotización.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Tipo de cambio no disponible o error inesperado. No se crea ninguna cotización.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    QuoteRequest:
+      type: object
+      required: [opportunityId, targetCurrency]
+      properties:
+        opportunityId:
+          type: string
+          minLength: 15
+          maxLength: 18
+          example: 006Hs00001AbCdEIAV
+        targetCurrency:
+          type: string
+          pattern: "^[A-Za-z]{3}$"
+          example: EUR
+    BatchRequest:
+      type: object
+      required: [requests]
+      properties:
+        requests:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            $ref: "#/components/schemas/QuoteRequest"
+    QuoteResult:
+      type: object
+      properties:
+        opportunityId: { type: string }
+        originalAmount: { type: number, example: 10000.00 }
+        originalCurrency: { type: string, example: USD }
+        targetCurrency: { type: string, example: EUR }
+        exchangeRate: { type: number, example: 0.87889 }
+        convertedAmount: { type: number, example: 8788.90 }
+        quotedAt: { type: string, format: date-time, example: "2026-09-28T14:03:12.000Z" }
+        rateDate: { type: string, format: date, example: "2026-09-28" }
+    BatchResponse:
+      type: object
+      properties:
+        quotes:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuoteResult"
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - INVALID_REQUEST_BODY
+                - EMPTY_REQUEST_LIST
+                - REQUEST_LIMIT_EXCEEDED
+                - INVALID_OPPORTUNITY_ID
+                - OPPORTUNITY_NOT_FOUND
+                - OPPORTUNITY_WITHOUT_AMOUNT
+                - INVALID_CURRENCY_CODE
+                - UNSUPPORTED_CURRENCY
+                - EXCHANGE_RATE_UNAVAILABLE
+                - INTERNAL_ERROR
+            message: { type: string }
+            requestIndex: { type: integer, nullable: true, minimum: 1 }
+            opportunityId: { type: string, nullable: true }
