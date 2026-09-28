@@ -40,8 +40,7 @@
         <name>CustomField</name>
     </types>
     <types>
-        <members>OpportunityQuoteSetting.Default</members>
-        <members>QuoteCurrency.*</members>
+        <members>*</members>
         <name>CustomMetadata</name>
     </types>
     <types>
