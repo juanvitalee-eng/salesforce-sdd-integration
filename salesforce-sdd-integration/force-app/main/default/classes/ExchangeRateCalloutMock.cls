@@ -1,7 +1,7 @@
 /**
  * ExchangeRateCalloutMock
  *
- * Qué hace: simula al proveedor de tipo de cambio (Frankfurter) durante los tests.
+ * Qué hace: simula al proveedor de tipo de cambio (currency-api) durante los tests.
  * Se le dice qué responder para cada moneda base: tasas, un código de error o un timeout.
  *
  * Por qué existe: la regla 13 de la constitución prohíbe tests que dependan de la API real.
@@ -10,8 +10,8 @@
  * Además cuenta cuántas llamadas recibió (callCount) para verificar que se hace un solo callout
  * por moneda base y no uno por pedido.
  *
- * Si se pide una moneda base que no fue configurada, responde 404 (igual que Frankfurter con una
- * moneda que no conoce).
+ * Si se pide una moneda base que no fue configurada, responde 404 (igual que currency-api con una
+ * moneda que no publica).
  */
 @IsTest
 public with sharing class ExchangeRateCalloutMock implements HttpCalloutMock {
@@ -23,10 +23,20 @@ public with sharing class ExchangeRateCalloutMock implements HttpCalloutMock {
     public Integer callCount = 0;                       // Cuántos callouts recibió
     public List<String> endpoints = new List<String>(); // A qué URLs se llamó, en orden
 
-    /** Configura una respuesta 200 con las tasas indicadas para una moneda base. */
+    /**
+     * Configura una respuesta 200 con las tasas indicadas para una moneda base, con el mismo formato
+     * que currency-api: códigos en minúsculas y la moneda base como clave del mapa de tasas.
+     *   {"date":"2026-09-28","usd":{"usd":1,"eur":0.87889,...}}
+     * Incluye la propia base dentro del mapa (como hace el proveedor real) para probar que el
+     * cliente no la confunde con la clave de afuera.
+     */
     public ExchangeRateCalloutMock withRates(String base, Date rateDate, Map<String, Decimal> rates) {
-        String body = '{"amount":1.0,"base":"' + base + '","date":"' + String.valueOf(rateDate)
-            + '","rates":' + JSON.serialize(rates) + '}';
+        Map<String, Decimal> providerRates = new Map<String, Decimal>{ base.toLowerCase() => 1 };
+        for (String code : rates.keySet()) {
+            providerRates.put(code.toLowerCase(), rates.get(code));
+        }
+        String body = '{"date":"' + String.valueOf(rateDate) + '","' + base.toLowerCase() + '":'
+            + JSON.serialize(providerRates) + '}';
         return withStatus(base, 200, body);
     }
 
@@ -48,7 +58,8 @@ public with sharing class ExchangeRateCalloutMock implements HttpCalloutMock {
         callCount++;
         endpoints.add(request.getEndpoint());
 
-        String base = request.getEndpoint().substringAfter('base=');
+        // La URL es ".../currencies/usd.json": sacamos "usd" y lo pasamos a "USD" para buscar la configuración.
+        String base = request.getEndpoint().substringAfter('/currencies/').substringBefore('.json').toUpperCase();
         if (timeoutBases.contains(base)) {
             throw new CalloutException('Read timed out');
         }

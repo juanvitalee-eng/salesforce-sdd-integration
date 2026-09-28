@@ -1,7 +1,7 @@
 /**
  * ExchangeRateClientTest
  *
- * Qué prueba: que ExchangeRateClient traduce bien cada respuesta del proveedor (Frankfurter):
+ * Qué prueba: que ExchangeRateClient traduce bien cada respuesta del proveedor (currency-api):
  * tasas OK, moneda no soportada (404), errores del proveedor, timeout y respuestas ilegibles.
  * Nunca llama a la API real: usa ExchangeRateCalloutMock (regla 13).
  */
@@ -56,7 +56,7 @@ private with sharing class ExchangeRateClientTest {
 
     @IsTest
     static void lanzaNoDisponibleCuandoLaRespuestaEstaIncompleta() {
-        assertUnavailable(new ExchangeRateCalloutMock().withStatus('USD', 200, '{"amount":1.0,"base":"USD"}'), 'USD');
+        assertUnavailable(new ExchangeRateCalloutMock().withStatus('USD', 200, '{"usd":{"eur":0.9}}'), 'USD');
     }
 
     @IsTest
@@ -72,8 +72,23 @@ private with sharing class ExchangeRateClientTest {
         Assert.areEqual(2, mock.callCount, 'Debe hacer exactamente un callout por moneda base');
         Assert.areEqual(2, tables.size(), 'Debe devolver una tabla por moneda base');
         for (String endpoint : mock.endpoints) {
-            Assert.isTrue(endpoint.startsWith('callout:FrankfurterApi/latest?base='), 'Usa la Named Credential: ' + endpoint);
+            Assert.isTrue(endpoint.startsWith('callout:CurrencyApi/currencies/'), 'Usa la Named Credential: ' + endpoint);
         }
+    }
+
+    @IsTest
+    static void usaMinusculasConElProveedorYMayusculasHaciaAdentro() {
+        ExchangeRateCalloutMock mock = new ExchangeRateCalloutMock().withRates(
+            'ARS', Date.newInstance(2026, 9, 28), new Map<String, Decimal>{ 'USD' => 0.00065713162 });
+        Test.setMock(HttpCalloutMock.class, mock);
+
+        Test.startTest();
+        ExchangeRateClient.RateTable ars = ExchangeRateClient.getRates(new Set<String>{ 'ARS' }).get('ARS');
+        Test.stopTest();
+
+        Assert.areEqual('callout:CurrencyApi/currencies/ars.json', mock.endpoints[0], 'El código va en minúsculas en la URL');
+        Assert.areEqual(0.00065713162, ars.rates.get('USD'), 'Las claves se devuelven en MAYÚSCULAS y con todos los decimales');
+        Assert.areEqual(1, ars.rates.get('ARS'), 'La base dentro del mapa no se confunde con la clave de afuera');
     }
 
     @IsTest

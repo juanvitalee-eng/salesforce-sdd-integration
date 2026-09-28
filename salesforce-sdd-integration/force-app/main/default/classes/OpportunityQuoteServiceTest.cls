@@ -152,6 +152,68 @@ private with sharing class OpportunityQuoteServiceTest {
         Assert.areEqual(0, [SELECT COUNT() FROM CurrencyQuote__c], 'Todo o nada: ni siquiera los pedidos 1 y 3');
     }
 
+    // ------------------------------------------------------------------ Monedas habilitadas (FR-025, FR-026)
+
+    @IsTest
+    static void rechazaUnaMonedaDestinoNoHabilitadaSinConsultarAlProveedor() {
+        Opportunity usd = opportunity(10000, 'USD');
+        ExchangeRateCalloutMock mock = ExchangeRateCalloutMock.usdDefault();
+        Test.setMock(HttpCalloutMock.class, mock);
+
+        QuoteException error = expectError(requests(usd.Id, 'BTC'), QuoteException.UNSUPPORTED_CURRENCY, 400, 1);
+
+        Assert.isTrue(error.getMessage().contains('moneda destino BTC no está habilitada'), 'Mensaje: ' + error.getMessage());
+        Assert.areEqual(0, mock.callCount, 'FR-026: se rechaza antes de consultar al proveedor');
+    }
+
+    @IsTest
+    static void rechazaUnaMonedaOriginalNoHabilitadaSinConsultarAlProveedor() {
+        Opportunity usd = opportunity(10000, 'USD');
+        OpportunityQuoteSettings.enabledCurrenciesOverride = new Set<String>{ 'EUR', 'GBP' }; // USD desactivada
+        ExchangeRateCalloutMock mock = ExchangeRateCalloutMock.usdDefault();
+        Test.setMock(HttpCalloutMock.class, mock);
+
+        QuoteException error = expectError(requests(usd.Id, 'EUR'), QuoteException.UNSUPPORTED_CURRENCY, 400, 1);
+
+        Assert.isTrue(error.getMessage().contains('moneda original USD no está habilitada'), 'Mensaje: ' + error.getMessage());
+        Assert.areEqual(0, mock.callCount, 'FR-026: se rechaza antes de consultar al proveedor');
+    }
+
+    @IsTest
+    static void rechazaUnaMonedaHabilitadaQueElProveedorNoPublica() {
+        Opportunity usd = opportunity(10000, 'USD');
+        OpportunityQuoteSettings.enabledCurrenciesOverride = new Set<String>{ 'USD', 'UYU' };
+        Test.setMock(HttpCalloutMock.class, ExchangeRateCalloutMock.usdDefault()); // el mock no publica UYU
+
+        QuoteException error = expectError(requests(usd.Id, 'UYU'), QuoteException.UNSUPPORTED_CURRENCY, 400, 1);
+        Assert.isTrue(error.getMessage().contains('no es publicada por el proveedor'), 'Mensaje: ' + error.getMessage());
+    }
+
+    @IsTest
+    static void cotizaUnaOportunidadEnArsConUnaTasaDeMuchosDecimales() {
+        Opportunity ars = opportunity(1000, 'ARS');
+        Test.setMock(HttpCalloutMock.class, new ExchangeRateCalloutMock().withRates(
+            'ARS', Date.newInstance(2026, 9, 28), new Map<String, Decimal>{ 'USD' => 0.00065713162 }));
+
+        Test.startTest();
+        QuoteModels.QuoteResult result = OpportunityQuoteService.quote(requests(ars.Id, 'USD'), CHANNEL)[0];
+        Test.stopTest();
+
+        Assert.areEqual(0.00065713162, result.exchangeRate, 'Se usa la tasa completa del proveedor');
+        Assert.areEqual(0.65, result.convertedAmount, '1000 × 0,00065713162 = 0,657… → truncado 0,65');
+        Decimal savedRate = [SELECT ExchangeRate__c FROM CurrencyQuote__c].ExchangeRate__c;
+        Assert.areEqual(0.0006571316, savedRate.setScale(10, System.RoundingMode.HALF_UP),
+            'Se guarda con al menos 10 decimales, sin perder precisión (FR-012)');
+    }
+
+    @IsTest
+    static void lasMonedasHabilitadasSalenDelCustomMetadata() {
+        Set<String> enabled = OpportunityQuoteSettings.enabledCurrencies();
+        Assert.isTrue(enabled.contains('ARS'), 'ARS viene habilitada de fábrica');
+        Assert.isTrue(enabled.contains('USD'), 'USD viene habilitada de fábrica');
+        Assert.isFalse(enabled.contains('BTC'), 'Las criptomonedas no están habilitadas');
+    }
+
     // ------------------------------------------------------------------ Casos borde
 
     @IsTest

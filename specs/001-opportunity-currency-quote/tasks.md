@@ -193,7 +193,7 @@ separado.
   - La `CurrencyQuote__c` creada tiene `Channel__c = 'Agent'` y el `ErrorLog__c` de un rechazo tiene `Channel__c = 'Agent'` (depende de T034)
 - [X] T037 [US2] Desplegar y correr `sf apex run test --tests OpportunityQuoteActionTest --code-coverage --wait 10 --target-org sdd-dev`
 - [X] T038 [US2] (Hecho con Agent Script: ver contracts/agent-action.md, "Implementación real".) **(Manual en la UI de Salesforce)** En Agentforce Builder, crear la Agent Action de tipo Apex sobre `OpportunityQuoteAction` y el Topic "Cotización de Oportunidades" con la descripción y las 4 instrucciones de [contracts/agent-action.md](./contracts/agent-action.md). Marcar las entradas como "Require Input" y las salidas como "Show in conversation", agregar el topic al Agentforce Employee Agent y activarlo. Asignar `OpportunityQuoteUser` a los usuarios internos que van a usar el agente
-- [X] T039 [US2] (El publish trajo `bots/`, `genAiPlannerBundles/` y `aiAuthoringBundles/`.) Recuperar la metadata del agente al repo: `sf project retrieve start --metadata GenAiFunction GenAiPlugin GenAiPlannerBundle --target-org sdd-dev`. Queda en `FA/genAiFunctions/`, `FA/genAiPlugins/` y `FA/genAiPlannerBundles/`. Revisar que solo se agreguen la acción, el topic y el agente que usamos, y descartar lo demás (depende de T038)
+- [X] T039 [US2] (Se versiona `aiAuthoringBundles/`; `bots/` y `genAiPlannerBundles/` quedaron en `.forceignore` en la Phase 7 porque no se pueden desplegar sobre un agente activo.) Recuperar la metadata del agente al repo: `sf project retrieve start --metadata GenAiFunction GenAiPlugin GenAiPlannerBundle --target-org sdd-dev`. Queda en `FA/genAiFunctions/`, `FA/genAiPlugins/` y `FA/genAiPlannerBundles/`. Revisar que solo se agreguen la acción, el topic y el agente que usamos, y descartar lo demás (depende de T038)
 - [X] T040 [US2] (Validado con `sf agent preview`: 5.1 = 8788.90 EUR, igual que REST; 5.2 pide el Id; 5.3 informa que no existe.) Validar los casos 5.1 a 5.3 de [quickstart.md](./quickstart.md) en el panel de Agentforce, comparando 5.1 con una llamada curl hecha en el mismo momento
 
 **Checkpoint**: los dos canales cotizan con la misma lógica.
@@ -312,3 +312,25 @@ Después: T043 (tests) → T044 (deploy + quickstart §6)
 - Cada historia cierra con deploy y tests en verde antes de seguir.
 - Commit al final de cada fase (ver [quickstart.md](./quickstart.md) para validar).
 - T038 es la única tarea manual en la UI. Lo demás es metadata versionada.
+
+---
+
+## Phase 7: Cambio 2026-09-28 — Proveedor currency-api y monedas configurables
+
+**Origen**: el usuario cotizó una Oportunidad en ARS y el agente respondió "la moneda original ARS no está soportada" (Frankfurter no publica ARS). Se decidió (spec.md, Clarifications) cambiar a **currency-api** y agregar una **lista de monedas habilitadas** configurable (FR-006, FR-025, FR-026).
+
+**Independent Test**: quickstart §4 casos 4.9 (ARS → USD = 200) y 4.10 (BTC = 400 "no está habilitada"); una moneda desactivada en `QuoteCurrency__mdt` se rechaza sin llamar al proveedor.
+
+- [X] T051 [P] Crear el Custom Metadata Type `QuoteCurrency__mdt` (Label "Moneda del Cotizador", descripción de [data-model.md](./data-model.md)) con el campo `IsActive__c` (Label "Activa", Checkbox, default true) en `FA/objects/QuoteCurrency__mdt/`
+- [X] T052 Crear los registros `FA/customMetadata/QuoteCurrency.<ISO>.md-meta.xml` para USD, EUR, ARS, GBP, BRL, CLP, MXN, UYU, todos con `IsActive__c = true` (depende de T051)
+- [X] T053 [P] Crear la External Credential `CurrencyApiNoAuth` (protocolo `Custom`, principal `CurrencyApiPrincipal`) y la Named Credential `CurrencyApi` (URL `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1`) en `FA/externalCredentials/` y `FA/namedCredentials/`
+- [X] T054 Cambiar `NamedCredentialName__c` a `CurrencyApi` en `FA/customMetadata/OpportunityQuoteSetting.Default.md-meta.xml` y el valor por defecto en `FA/classes/OpportunityQuoteSettings.cls`
+- [X] T055 Cambiar `ExchangeRate__c` a Number(18,10) en `FA/objects/CurrencyQuote__c/fields/ExchangeRate__c.field-meta.xml` (FR-012)
+- [X] T056 Agregar `enabledCurrencies()` (Set de códigos activos de `QuoteCurrency__mdt`) con override `@TestVisible` en `FA/classes/OpportunityQuoteSettings.cls` (depende de T051)
+- [X] T057 Adaptar `FA/classes/ExchangeRateClient.cls` al nuevo proveedor (research §1): `GET callout:<nc>/currencies/<base en minúsculas>.json`; renombrar la clave de la base a `"rates"` y `"date"` a `"rateDate"` antes de deserializar tipado; claves de tasas en MAYÚSCULAS; 404 → `isSupported = false`; resto de errores → `ExchangeRateUnavailableException` (depende de T053)
+- [X] T058 En `FA/classes/OpportunityQuoteService.cls`: etapa 2 rechaza la moneda destino no habilitada; etapa 3 rechaza la moneda original no habilitada; ambos con `UNSUPPORTED_CURRENCY` y mensaje "…no está habilitada en el Cotizador", **antes** de cualquier callout (FR-026). Los mensajes de la etapa 5 pasan a "…no es publicada por el proveedor de tipo de cambio" (depende de T056)
+- [X] T059 En `FA/permissionsets/OpportunityQuoteUser.permissionset-meta.xml`, reemplazar el principal `FrankfurterNoAuth-FrankfurterPrincipal` por `CurrencyApiNoAuth-CurrencyApiPrincipal` (depende de T053)
+- [X] T060 Actualizar `FA/classes/ExchangeRateCalloutMock.cls` al formato de currency-api y ajustar los tests: `ExchangeRateClientTest` (URL `callout:CurrencyApi/currencies/usd.json`, claves en minúsculas → mayúsculas), `OpportunityQuoteServiceTest` (nuevos casos: destino no habilitado sin callout, original no habilitada sin callout, moneda desactivada, ARS → USD con tasa de 11 decimales truncada correctamente) (depende de T057, T058)
+- [X] T061 Desplegar y correr toda la suite (6 clases de test): 100% en verde y ≥ 85% por clase
+- [X] T062 Eliminar la Named Credential `FrankfurterApi` y la External Credential `FrankfurterNoAuth` del repo y de la org
+- [X] T063 Validar en vivo: quickstart §4 (4.1 a 4.10) por REST y el caso ARS conversando con el agente (`sf agent preview`)

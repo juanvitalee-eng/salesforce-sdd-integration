@@ -12,6 +12,6 @@
     </values>
     <values>
         <field>NamedCredentialName__c</field>
-        <value xsi:type="xsd:string">FrankfurterApi</value>
+        <value xsi:type="xsd:string">CurrencyApi</value>
     </values>
 </CustomMetadata>

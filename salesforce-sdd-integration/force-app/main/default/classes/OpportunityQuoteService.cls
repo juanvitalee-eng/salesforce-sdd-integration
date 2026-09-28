@@ -99,6 +99,9 @@ public with sharing class OpportunityQuoteService {
         Map<Integer, Id> opportunityIdByPosition = new Map<Integer, Id>();
         Map<Integer, String> targetCurrencyByPosition = new Map<Integer, String>();
 
+        // Monedas que un administrador habilitó para el Cotizador (FR-025).
+        Set<String> enabledCurrencies = OpportunityQuoteSettings.enabledCurrencies();
+
         // Etapa 2: formato de cada pedido. No cortamos: anotamos el error y seguimos.
         for (Integer position = 1; position <= total; position++) {
             QuoteModels.QuoteRequest request = requests[position - 1];
@@ -121,12 +124,23 @@ public with sharing class OpportunityQuoteService {
                     position, rawId));
                 continue;
             }
+            String targetCurrency = rawCurrency.trim().toUpperCase(); // "eur" → "EUR"
+            if (!enabledCurrencies.contains(targetCurrency)) {
+                // Se rechaza acá, antes de consultar al proveedor (FR-026).
+                errorsByPosition.put(position, QuoteException.validation(
+                    QuoteException.UNSUPPORTED_CURRENCY,
+                    requestPrefix(position, rawId) + 'la moneda destino ' + targetCurrency
+                        + ' no está habilitada en el Cotizador.',
+                    position, rawId));
+                continue;
+            }
             opportunityIdByPosition.put(position, opportunityId);
-            targetCurrencyByPosition.put(position, rawCurrency.trim().toUpperCase()); // "eur" → "EUR"
+            targetCurrencyByPosition.put(position, targetCurrency);
         }
 
         // Etapa 3: leer las Oportunidades (una sola consulta, respetando los permisos del usuario).
-        Map<Integer, Opportunity> opportunityByPosition = loadOpportunities(requests, opportunityIdByPosition, errorsByPosition);
+        Map<Integer, Opportunity> opportunityByPosition =
+            loadOpportunities(requests, opportunityIdByPosition, errorsByPosition, enabledCurrencies);
 
         // Etapas 4 y 5: tipos de cambio y cálculo.
         Map<Integer, QuoteModels.QuoteResult> resultByPosition =
@@ -168,12 +182,14 @@ public with sharing class OpportunityQuoteService {
      * Etapa 3: lee las Oportunidades con UNA consulta (nunca SOQL dentro de un loop, regla 6).
      * WITH USER_MODE hace que se respeten los permisos del usuario: si no puede ver una
      * Oportunidad, para nosotros "no existe" (sin revelar que existe, FR-005).
+     * También rechaza las Oportunidades cuya moneda no está habilitada, antes de cualquier callout.
      * Devuelve las Oportunidades listas para cotizar, por posición.
      */
     private static Map<Integer, Opportunity> loadOpportunities(
         List<QuoteModels.QuoteRequest> requests,
         Map<Integer, Id> opportunityIdByPosition,
-        Map<Integer, QuoteException> errorsByPosition
+        Map<Integer, QuoteException> errorsByPosition,
+        Set<String> enabledCurrencies
     ) {
         Map<Integer, Opportunity> opportunityByPosition = new Map<Integer, Opportunity>();
         if (opportunityIdByPosition.isEmpty()) {
@@ -197,6 +213,12 @@ public with sharing class OpportunityQuoteService {
                 errorsByPosition.put(position, QuoteException.validation(
                     QuoteException.OPPORTUNITY_WITHOUT_AMOUNT,
                     requestPrefix(position, rawId) + 'la Oportunidad no tiene monto para cotizar.',
+                    position, rawId));
+            } else if (!enabledCurrencies.contains(opportunity.CurrencyIsoCode)) {
+                errorsByPosition.put(position, QuoteException.validation(
+                    QuoteException.UNSUPPORTED_CURRENCY,
+                    requestPrefix(position, rawId) + 'la moneda original ' + opportunity.CurrencyIsoCode
+                        + ' no está habilitada en el Cotizador.',
                     position, rawId));
             } else {
                 opportunityByPosition.put(position, opportunity);
@@ -259,7 +281,7 @@ public with sharing class OpportunityQuoteService {
                 errorsByPosition.put(position, QuoteException.validation(
                     QuoteException.UNSUPPORTED_CURRENCY,
                     requestPrefix(position, rawId) + 'la moneda original ' + originalCurrency
-                        + ' no está soportada por el proveedor de tipo de cambio.',
+                        + ' no es publicada por el proveedor de tipo de cambio.',
                     position, rawId));
                 continue;
             }
@@ -270,7 +292,7 @@ public with sharing class OpportunityQuoteService {
                 errorsByPosition.put(position, QuoteException.validation(
                     QuoteException.UNSUPPORTED_CURRENCY,
                     requestPrefix(position, rawId) + 'la moneda destino ' + targetCurrency
-                        + ' no está soportada por el proveedor de tipo de cambio.',
+                        + ' no es publicada por el proveedor de tipo de cambio.',
                     position, rawId));
                 continue;
             }

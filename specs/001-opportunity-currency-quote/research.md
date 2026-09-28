@@ -7,43 +7,54 @@ decisiones técnicas y por qué se tomaron.
 
 ---
 
-## 1. Cómo consultar Frankfurter
+## 1. Cómo consultar el proveedor (currency-api)
 
-**Decision**: una sola llamada `GET {FrankfurterApi}/latest?base={MONEDA_ORIGINAL}` (sin
-`symbols`) por cada **moneda original distinta** del lote. La respuesta trae todas las tasas de esa
-moneda base, y el Service busca en ese mapa la moneda destino de cada pedido.
+> **Cambio 2026-09-28**: el diseño original usaba Frankfurter (BCE, ~30 monedas). Se reemplazó por
+> currency-api porque Frankfurter **no publica ARS**, que es una moneda activa de la org.
+
+**Decision**: una sola llamada `GET {CurrencyApi}/currencies/{moneda_original_en_minúsculas}.json` por
+cada **moneda original distinta** del lote. La respuesta trae todas las tasas de esa moneda base y el
+Service busca en ese mapa la moneda destino de cada pedido.
 
 Comportamiento del proveedor (verificado contra la API real el 2026-09-28):
 
 | Llamada | Respuesta | Interpretación |
 |---|---|---|
-| `/v1/latest?base=USD` | 200 `{"amount":1.0,"base":"USD","date":"2026-09-28","rates":{"EUR":0.87889,...}}` | OK. `rates` **no** incluye la moneda base |
-| `/v1/latest?base=ARS` | 404 `{"message":"not found"}` | Moneda original no soportada → 400 `UNSUPPORTED_CURRENCY` |
-| moneda destino ausente de `rates` (y distinta de la base) | — | Moneda destino no soportada → 400 `UNSUPPORTED_CURRENCY` |
-| timeout (> 10 s), 5xx, 429, cuerpo ilegible, otros 4xx | — | Proveedor no disponible → 500 `EXCHANGE_RATE_UNAVAILABLE` |
+| `/currencies/usd.json` | 200 `{"date":"2026-09-28","usd":{"ars":1521.76514116,"eur":0.87803741,...}}` | OK. La clave del mapa de tasas es la propia moneda base, en minúsculas |
+| `/currencies/xyz.json` | 404 | Moneda original no publicada → 400 `UNSUPPORTED_CURRENCY` |
+| `/currencies/USD.json` | 404 | **El código va siempre en minúsculas** (el cliente lo convierte) |
+| moneda destino ausente de las tasas | — | Moneda destino no publicada → 400 `UNSUPPORTED_CURRENCY` |
+| timeout (> 10 s), 5xx, 429, cuerpo ilegible | — | Proveedor no disponible → 500 `EXCHANGE_RATE_UNAVAILABLE` |
 
-- **Moneda destino = moneda original**: tipo de cambio 1. Se hace igual el callout para la base, así
-  se aplica la misma regla de "moneda soportada" y la fecha/hora de cotización es real.
-- **`date` del proveedor**: se guarda como `RateDate__c` (fecha de publicación de la tasa por el BCE),
-  útil para auditoría porque Frankfurter no publica los fines de semana.
+- Las tasas llegan con hasta 11 decimales (ARS→USD = 0.00065713162). Se usan completas para el cálculo
+  y se guardan en un campo Number(18,10) (§4).
+- El cliente normaliza las claves a MAYÚSCULAS para que el resto del sistema siga usando códigos ISO.
+- Como la clave del mapa varía según la moneda base (`"usd"`, `"ars"`, ...), el cliente la renombra a
+  `"rates"` antes de deserializar con un wrapper tipado (misma técnica que con `"date"`).
+- **Moneda destino = moneda original**: tipo de cambio 1 (igual se hace el callout para validar la base).
+- `date` se guarda como `RateDate__c`.
+- El proveedor también publica criptomonedas; quedan excluidas por la lista de monedas habilitadas (§11).
+- Existe un dominio de respaldo (`latest.currency-api.pages.dev`); **no** se usa en v1 (un solo endpoint,
+  configurable en la Named Credential si hiciera falta cambiarlo).
 
-**Rationale**: con `base` sin `symbols` alcanza un callout por moneda base. Como las monedas
-originales solo pueden ser monedas activas de la org, un lote de 200 pedidos usa típicamente 1 a 3
-callouts, muy por debajo del límite de 100.
+- **Limitación conocida (vista en vivo el 2026-09-28)**: el proveedor se sirve desde una CDN con `@latest`,
+  que cachea las respuestas. Dos llamadas con minutos de diferencia pueden recibir tasas de días distintos
+  (ej. USD con `date` 2026-09-27 y ARS con 2026-09-28) o nodos con versiones distintas. Por eso cada
+  cotización guarda `RateDate__c`: SC-006 se cumple para el mismo tipo de cambio, no necesariamente para
+  el mismo minuto. Si hiciera falta más consistencia, la mejora sería consultar la fecha explícita
+  (`@<fecha>` en la URL) en lugar de `@latest`.
 
-**Alternatives considered**:
-- Un callout por pedido: rompe con 200 pedidos (límite de 100 callouts) y es lento.
-- Consultar `/v1/currencies` antes para validar monedas: agrega un callout sin beneficio, porque el
-  404 y la ausencia en `rates` ya informan lo mismo.
-- Usar `symbols=`: con un símbolo inválido Frankfurter devuelve 404 para todo el pedido, y no se
-  podría saber qué pedido falló.
+**Rationale**: igual que antes, un callout por moneda base; un lote de 200 pedidos usa típicamente 1 a 3.
+
+**Alternatives considered**: Frankfurter (sin ARS); ExchangeRate-API `open.er-api.com` (también sin key y
+con ARS; el usuario eligió currency-api); un callout por pedido (rompe el límite de 100 callouts).
 
 ## 2. Autenticación y endpoint (Named Credential sin autenticación)
 
-**Decision**: Named Credential `FrankfurterApi` (URL `https://api.frankfurter.dev/v1`) respaldada por
-la External Credential `FrankfurterNoAuth` con protocolo **No Authentication**. El acceso al
+**Decision**: Named Credential `CurrencyApi` (URL `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1`)
+respaldada por la External Credential `CurrencyApiNoAuth` (protocolo `Custom` sin parámetros, ver abajo). El acceso al
 principal se otorga en el permission set `OpportunityQuoteUser`. El código llama a
-`callout:FrankfurterApi/latest?base=USD`.
+`callout:CurrencyApi/currencies/usd.json`.
 
 **Rationale**: cumple la regla 10 (nada de URLs hardcodeadas) con el modelo moderno de credenciales.
 Si en el futuro cambia el proveedor o se necesita una API key, solo se cambia la credencial, no el
@@ -55,7 +66,7 @@ sin parámetros de autenticación**, que funciona igual para una API pública.
 
 **Riesgo / plan B original**: si el deploy rechaza el valor `NoAuthentication` en `authenticationProtocol`,
 crear la External Credential en Setup (Authentication Protocol: No Authentication), recuperarla con
-`sf project retrieve start --metadata ExternalCredential:FrankfurterNoAuth` y versionar ese XML.
+`sf project retrieve start --metadata ExternalCredential:CurrencyApiNoAuth` y versionar ese XML.
 
 **Alternatives considered**: Named Credential "legacy" (deprecada para nuevos desarrollos); Remote
 Site Setting + URL en Custom Metadata (funciona, pero es menos seguro y no es la práctica
@@ -88,7 +99,8 @@ FR-010); devolver resultados parciales (descartado por la clarificación "todo o
 
 **Decision**: `convertedAmount = (amount * rate).setScale(2, System.RoundingMode.DOWN)`. `DOWN`
 trunca hacia cero (FR-012). El tipo de cambio se guarda tal cual lo devuelve el proveedor, en un campo
-Number(18,6). Frankfurter publica a lo sumo 5 decimales, así que no se pierde precisión.
+Number(18,10). currency-api publica hasta 11 decimales: el cálculo usa la tasa completa y se guardan
+10 decimales (suficiente para monedas de bajo valor como ARS: 0.0006571316).
 
 **Rationale**: `RoundingMode.DOWN` es exactamente "truncar hacia cero"; `FLOOR` redondearía los
 negativos hacia abajo (−1,239 → −1,24), lo que no es truncar.
@@ -104,7 +116,7 @@ con el valor por defecto y no se usa.
 moneda (`CurrencyIsoCode`), pero cada cotización tiene **dos** monedas. Además, la moneda destino
 puede no estar activa en la org (por ejemplo, JPY), y asignarla a `CurrencyIsoCode` daría error de
 DML. Los campos Number evitan conversiones automáticas de Salesforce que no queremos (la tasa
-siempre sale de Frankfurter).
+siempre sale del proveedor externo).
 
 **Alternatives considered**: campos Currency con `CurrencyIsoCode = moneda destino` (falla con
 monedas no activas y muestra mal el monto original).
@@ -140,7 +152,7 @@ el permission set (funciona, pero agrega permisos sobre un objeto técnico).
   (FR-020).
 - Permission sets: `OpportunityQuoteUser` (usuario de integración + usuarios internos del agente:
   Read Opportunity/Amount, Create+Read `CurrencyQuote__c`, acceso a las clases
-  `OpportunityQuoteResource` y `OpportunityQuoteAction`, principal de `FrankfurterNoAuth`) y
+  `OpportunityQuoteResource` y `OpportunityQuoteAction`, principal de `CurrencyApiNoAuth` y Read sobre `UserExternalCredential`) y
   `CurrencyQuoteAuditor` (solo Read `CurrencyQuote__c`).
 
 **Rationale**: Public Read Only permite que el auditor vea todas las cotizaciones. Con Lookup no
@@ -170,7 +182,7 @@ y poco documentada); usar un Flow como acción (duplicaría el adaptador sin ben
 
 **Decision**: `OpportunityQuoteSetting__mdt` con un registro `Default`:
 `MaxRequestsPerCall__c = 200`, `CalloutTimeoutMs__c = 10000`,
-`NamedCredentialName__c = FrankfurterApi`.
+`NamedCredentialName__c = CurrencyApi`.
 
 **Rationale**: regla 10. Estos valores se pueden cambiar sin desplegar código (spec: "se puede
 ajustar por configuración").
@@ -185,3 +197,19 @@ sin cambios.
 
 **Prerequisito de org**: los tests usan `CurrencyIsoCode`, así que requieren Multi-Currency con al
 menos **USD y EUR activas** en `sdd-dev` (ver quickstart).
+
+## 11. Lista de monedas habilitadas (FR-025, FR-026)
+
+**Decision**: Custom Metadata Type `QuoteCurrency__mdt` ("Moneda del Cotizador"): un registro por moneda,
+con `DeveloperName` = código ISO (ej. `ARS`) y un checkbox `IsActive__c`. `OpportunityQuoteSettings`
+expone `enabledCurrencies()` (solo las activas). El Service valida la moneda destino en la etapa 2 y la
+moneda original en la etapa 3, **antes** de cualquier callout (FR-026).
+
+- Se mantiene el código de error `UNSUPPORTED_CURRENCY` (contrato estable para el ERP); el mensaje
+  distingue "no está habilitada en el Cotizador" de "no es publicada por el proveedor".
+- Registros iniciales: USD, EUR, ARS, GBP, BRL, CLP, MXN, UYU (editables desde Setup → Custom Metadata Types).
+- Tests: `OpportunityQuoteSettings` tiene un override `@TestVisible` para simular listas distintas.
+
+**Alternatives considered**: Custom Setting (CMDT se despliega junto con el código y es lo que pide la
+constitución, regla 10); un campo de texto con códigos separados por coma (más fácil de romper, sin
+activar/desactivar por moneda).

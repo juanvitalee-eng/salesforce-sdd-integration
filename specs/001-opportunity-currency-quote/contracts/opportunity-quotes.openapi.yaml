@@ -4,7 +4,7 @@ info:
   version: "1.0"
   description: >
     Cotiza el monto de Oportunidades de Salesforce en otra moneda usando el tipo de cambio del día
-    (Frankfurter). Procesamiento "todo o nada": si un pedido falla, se rechaza la llamada entera.
+    (currency-api). Procesamiento "todo o nada": si un pedido falla, se rechaza la llamada entera.
 servers:
   - url: https://{instance}.my.salesforce.com/services/apexrest
     variables:

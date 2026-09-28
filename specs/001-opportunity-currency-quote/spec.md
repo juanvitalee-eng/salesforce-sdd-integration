@@ -13,10 +13,11 @@
 ### Session 2026-09-28
 
 - Q: ¿La org tiene Multi-Currency habilitado o todas las Oportunidades usan la moneda corporativa? → A: Multi-Currency está habilitado en la org; la moneda original de cada Oportunidad es su propio campo de moneda (`CurrencyIsoCode`).
-- Q: ¿Qué proveedor externo de tipo de cambio se usa? → A: Frankfurter (datos del Banco Central Europeo, sin API key, ~30 monedas, actualización diaria en días hábiles).
+- Q: ¿Qué proveedor externo de tipo de cambio se usa? → A: currency-api (proyecto open source "fawazahmed0/exchange-api", servido por jsDelivr): sin API key, 200+ monedas incluyendo ARS, actualización diaria. *(Reemplaza la decisión inicial de usar Frankfurter, descartada porque no publica ARS.)*
 - Q: ¿Se deja algún registro técnico cuando una cotización falla? → A: Sí, en un objeto de log de errores genérico y reutilizable por otras funcionalidades (`ErrorLog__c`), no uno específico de cotizaciones.
 - Q: ¿Cómo se redondea el monto convertido a 2 decimales? → A: Truncando: se descartan los decimales sobrantes sin redondear (1.234,569 → 1.234,56).
 - Q: ¿Qué pasa con las cotizaciones históricas si se borra la Oportunidad? → A: No se puede borrar una Oportunidad que tenga cotizaciones (relación Lookup que impide el borrado); el historial queda siempre protegido.
+- Q: ¿Quién decide qué monedas acepta el Cotizador? → A: Un administrador, con una lista configurable de monedas habilitadas (Custom Metadata), sin desplegar código. Una moneda (original o destino) solo se puede cotizar si está habilitada en la lista **y** el proveedor la publica.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -36,7 +37,8 @@ Un sistema externo (ERP/CRM) envía a Salesforce uno o más pedidos de cotizaci�
 4. **Given** que el proveedor de tipo de cambio no responde o responde con error, **When** el sistema externo pide una cotización, **Then** recibe un mensaje de error claro indicando que el tipo de cambio no está disponible, código 500, ningún dato inventado, y no se crea ningún registro histórico.
 5. **Given** una lista con varios pedidos válidos, **When** el sistema externo la envía en una sola llamada, **Then** recibe un resultado por cada pedido, en el mismo orden en que los envió.
 6. **Given** una lista de 3 pedidos donde el segundo tiene un Id inexistente, **When** el sistema externo la envía, **Then** recibe código 400 con un mensaje claro que identifica el pedido 2 como el que falló, ninguna cotización y ningún registro histórico creado (ni siquiera para los pedidos 1 y 3).
-7. **Given** una Oportunidad cuya moneda original no es soportada por el proveedor (por ejemplo, ARS), **When** el sistema externo pide la cotización, **Then** recibe un mensaje claro indicando que la moneda original no está soportada y código 400, sin registro histórico.
+7. **Given** una Oportunidad cuya moneda original no está habilitada en la lista de monedas del Cotizador, **When** el sistema externo pide la cotización, **Then** recibe un mensaje claro indicando que la moneda no está habilitada y código 400, sin registro histórico.
+8. **Given** una Oportunidad en ARS (moneda habilitada), **When** el sistema externo pide la cotización en USD, **Then** recibe la cotización con el tipo de cambio del día del proveedor y código 200.
 
 ---
 
@@ -79,6 +81,7 @@ El responsable de auditoría puede consultar en Salesforce un registro históric
 - **Oportunidad sin monto** (monto vacío): se responde con un error claro de pedido inválido (400) indicando que la Oportunidad no tiene monto para cotizar, y no se crea registro histórico.
 - **Moneda destino igual a la moneda original**: se permite; el tipo de cambio es 1 y el monto convertido es igual al original. Se registra igual que cualquier otra cotización.
 - **Moneda destino vacía o con formato incorrecto** (por ejemplo, "euro" en vez de "EUR"): error claro de pedido inválido (400).
+- **Código que el proveedor publica pero no está habilitado** (por ejemplo, una criptomoneda como "BTC"): error de pedido inválido (400) indicando que la moneda no está habilitada.
 - **Moneda destino en minúsculas** ("eur"): se interpreta sin distinguir mayúsculas de minúsculas.
 - **Lista vacía o cuerpo del pedido mal formado**: error claro de pedido inválido (400).
 - **Lista que supera el máximo permitido de pedidos por llamada**: error claro de pedido inválido (400) indicando el máximo.
@@ -101,7 +104,7 @@ El responsable de auditoría puede consultar en Salesforce un registro históric
 **Validaciones y errores**
 
 - **FR-005**: Si el Id de Oportunidad no existe, no tiene un formato válido o la Oportunidad no es visible para quien consulta, el sistema DEBE responder con un mensaje claro en lenguaje de negocio y código de pedido inválido (HTTP 400).
-- **FR-006**: Si la moneda destino o la moneda original de la Oportunidad no es soportada por el proveedor de tipo de cambio, el sistema DEBE responder con un mensaje claro y código de pedido inválido (HTTP 400).
+- **FR-006**: Si la moneda destino o la moneda original de la Oportunidad no está habilitada en la lista de monedas del Cotizador (FR-025), o no es publicada por el proveedor de tipo de cambio, el sistema DEBE responder con un mensaje claro que indique cuál de los dos motivos aplica y código de pedido inválido (HTTP 400).
 - **FR-007**: Si el proveedor de tipo de cambio no responde, tarda más del tiempo máximo permitido o responde con error, el sistema DEBE responder con un mensaje claro y código de error del servicio (HTTP 500), sin devolver ningún valor estimado, guardado o inventado.
 - **FR-008**: Los mensajes de error NUNCA DEBEN exponer detalles técnicos internos (trazas, nombres internos, mensajes crudos de la plataforma).
 - **FR-009**: Si la Oportunidad no tiene monto, el sistema DEBE responder con un error claro de pedido inválido (HTTP 400).
@@ -110,7 +113,7 @@ El responsable de auditoría puede consultar en Salesforce un registro históric
 **Cálculo**
 
 - **FR-011**: El monto convertido DEBE calcularse como monto original × tipo de cambio vigente informado por el proveedor al momento del pedido.
-- **FR-012**: El monto convertido DEBE truncarse a 2 decimales (se descartan los decimales sobrantes, sin redondear: 1.234,569 → 1.234,56; en montos negativos se trunca hacia cero); el tipo de cambio DEBE conservarse con la precisión informada por el proveedor (al menos 6 decimales).
+- **FR-012**: El monto convertido DEBE truncarse a 2 decimales (se descartan los decimales sobrantes, sin redondear: 1.234,569 → 1.234,56; en montos negativos se trunca hacia cero); el tipo de cambio DEBE conservarse con la precisión informada por el proveedor (al menos 10 decimales, porque monedas de bajo valor como ARS tienen tasas del orden de 0,0006).
 - **FR-013**: La fecha/hora de la cotización DEBE ser el momento en que el sistema obtuvo el tipo de cambio, expresada en formato estándar con zona horaria (UTC).
 
 **Canal conversacional (agente)**
@@ -134,6 +137,11 @@ El responsable de auditoría puede consultar en Salesforce un registro históric
 - **FR-023**: El log de errores DEBE ser genérico: su estructura no puede depender del Cotizador, para que otras funcionalidades futuras lo reutilicen.
 - **FR-024**: El detalle técnico del log es solo para administradores; nunca se expone al llamador (FR-008). Los usuarios de negocio no tienen acceso al log de errores.
 
+**Monedas habilitadas**
+
+- **FR-025**: El sistema DEBE permitir que un administrador defina qué monedas acepta el Cotizador mediante una lista configurable (alta, baja o desactivación de una moneda) sin desplegar código. La lista aplica tanto a la moneda original de la Oportunidad como a la moneda destino.
+- **FR-026**: La validación contra la lista de monedas habilitadas DEBE hacerse antes de consultar al proveedor, para no gastar consultas en pedidos que igual se van a rechazar.
+
 ### Key Entities
 
 - **Oportunidad**: registro de negocio existente en Salesforce. Aporta el monto original y la moneda original; la moneda original es la moneda propia de cada Oportunidad (`CurrencyIsoCode`, la org tiene Multi-Currency habilitado), no la moneda corporativa. Es solo de lectura para esta funcionalidad.
@@ -141,7 +149,8 @@ El responsable de auditoría puede consultar en Salesforce un registro históric
 - **Resultado de cotización**: lo que se devuelve por cada pedido. Si fue exitoso, incluye monto original, moneda original, moneda destino, monto convertido, tipo de cambio y fecha/hora. Si falló, incluye el motivo en lenguaje claro.
 - **Cotización histórica (CurrencyQuote__c)**: registro permanente de cada cotización exitosa. Se vincula obligatoriamente a una Oportunidad (una Oportunidad puede tener muchas cotizaciones; la relación es de búsqueda y bloquea el borrado de la Oportunidad mientras tenga cotizaciones) e incluye los mismos datos del resultado exitoso más el canal de origen (sistema externo o agente).
 - **Log de errores (ErrorLog__c)**: registro técnico genérico, reutilizable por cualquier funcionalidad, de cada llamada rechazada. Incluye fecha/hora, funcionalidad de origen, canal, tipo de error, mensaje de negocio, detalle técnico y referencia al registro/pedido involucrado. Solo visible para administradores. No está vinculado obligatoriamente a una Oportunidad.
-- **Proveedor de tipo de cambio**: servicio externo único (Frankfurter) que informa el tipo de cambio vigente entre dos monedas y qué monedas soporta.
+- **Moneda habilitada**: código ISO 4217 de 3 letras que un administrador habilitó para el Cotizador, con un indicador de activa/inactiva.
+- **Proveedor de tipo de cambio**: servicio externo único (currency-api) que informa el tipo de cambio vigente entre dos monedas y qué monedas publica.
 
 ## Success Criteria *(mandatory)*
 
@@ -162,7 +171,7 @@ El responsable de auditoría puede consultar en Salesforce un registro históric
 - El sistema externo ya está autorizado para integrarse con Salesforce mediante el mecanismo de autenticación estándar de la organización; definir ese mecanismo está fuera de alcance.
 - "Tipo de cambio del día" significa el tipo de cambio vigente que informa el proveedor en el momento del pedido; no se guardan tipos de cambio en caché para reutilizarlos.
 - La org tiene Multi-Currency habilitado: cada Oportunidad puede estar en una moneda distinta, y la cotización siempre parte de la moneda propia de la Oportunidad. Las tasas de conversión configuradas dentro de Salesforce NO se usan para cotizar; el tipo de cambio sale siempre del proveedor externo.
-- El único proveedor de tipo de cambio es **Frankfurter** (datos del Banco Central Europeo). Acepta códigos de moneda ISO 4217 de 3 letras, informa qué monedas soporta (~30) y no requiere API key. Publica un tipo de cambio por día hábil; "tipo de cambio del día" es el último publicado por el proveedor. Una moneda (original o destino) fuera de la lista del proveedor se considera no soportada (FR-006).
+- El único proveedor de tipo de cambio es **currency-api** (proyecto open source `fawazahmed0/exchange-api`, servido por la CDN jsDelivr). No requiere API key, publica 200+ monedas (incluidas ARS y criptomonedas) y se actualiza una vez por día; "tipo de cambio del día" es el último publicado. No tiene SLA: se acepta ese riesgo para un proyecto de aprendizaje. Las criptomonedas y cualquier moneda no deseada quedan fuera mediante la lista de monedas habilitadas (FR-025).
 - Como el proveedor puede informar en una sola consulta todas las tasas de una moneda base, un lote de hasta 200 pedidos no requiere una consulta por pedido.
 - El máximo de 200 pedidos por llamada es un valor por defecto razonable; se puede ajustar por configuración.
 - El tiempo máximo de espera al proveedor es de 10 segundos; si se supera, se considera que no respondió (FR-007).

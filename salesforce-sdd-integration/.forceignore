@@ -12,3 +12,9 @@ package.xml
 **/__tests__/**
 
 node_modules/
+
+# Agentforce (Agent Script): la fuente es aiAuthoringBundles/*.agent y se publica con
+# `sf agent publish authoring-bundle`. Bot y GenAiPlannerBundle los genera ese publish y no se pueden
+# desplegar sobre un agente activo, así que se excluyen del deploy/retrieve por source.
+**/bots/**
+**/genAiPlannerBundles/**

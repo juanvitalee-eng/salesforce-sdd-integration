@@ -15,11 +15,33 @@ public with sharing class OpportunityQuoteSettings {
     private static final String RECORD_NAME = 'Default';
     private static final Integer DEFAULT_MAX_REQUESTS = 200;
     private static final Integer DEFAULT_TIMEOUT_MS = 10000;
-    private static final String DEFAULT_NAMED_CREDENTIAL = 'FrankfurterApi';
+    private static final String DEFAULT_NAMED_CREDENTIAL = 'CurrencyApi';
 
     // Solo para tests: permite simular otra configuración sin tocar la de la org.
     @TestVisible
     private static OpportunityQuoteSetting__mdt testOverride;
+
+    // Solo para tests: permite simular otra lista de monedas habilitadas.
+    @TestVisible
+    private static Set<String> enabledCurrenciesOverride;
+
+    /**
+     * Monedas que el Cotizador acepta (FR-025): los códigos ISO de los registros ACTIVOS de
+     * QuoteCurrency__mdt ("Moneda del Cotizador"). Un administrador las edita desde Setup.
+     * getAll() lee el Custom Metadata sin gastar consultas SOQL.
+     */
+    public static Set<String> enabledCurrencies() {
+        if (enabledCurrenciesOverride != null) {
+            return enabledCurrenciesOverride;
+        }
+        Set<String> codes = new Set<String>();
+        for (QuoteCurrency__mdt quoteCurrency : QuoteCurrency__mdt.getAll().values()) {
+            if (quoteCurrency.IsActive__c) {
+                codes.add(quoteCurrency.DeveloperName.toUpperCase());
+            }
+        }
+        return codes;
+    }
 
     /** Cantidad máxima de pedidos aceptados en una llamada (FR-004). */
     public static Integer maxRequestsPerCall() {

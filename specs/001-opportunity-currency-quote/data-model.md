@@ -37,7 +37,7 @@ moneda. Se crea desde el canal externo o desde el agente, y nunca modifica la Op
 | `OriginalAmount__c` | Monto original | Number(16,2) | Sí | Monto de la Oportunidad al momento de cotizar, en su moneda original. |
 | `OriginalCurrency__c` | Moneda original | Text(3) | Sí | Código ISO 4217 de la moneda de la Oportunidad (su CurrencyIsoCode). |
 | `TargetCurrency__c` | Moneda destino | Text(3) | Sí | Código ISO 4217 de la moneda a la que se convirtió. |
-| `ExchangeRate__c` | Tipo de cambio | Number(18,6) | Sí | Tipo de cambio informado por el proveedor (1 moneda original = X moneda destino). |
+| `ExchangeRate__c` | Tipo de cambio | Number(18,10) | Sí | Tipo de cambio informado por el proveedor (1 moneda original = X moneda destino). |
 | `ConvertedAmount__c` | Monto convertido | Number(18,2) | Sí | Monto original × tipo de cambio, truncado a 2 decimales. |
 | `QuotedAt__c` | Fecha/hora de cotización | DateTime | Sí | Momento en que el sistema obtuvo el tipo de cambio (UTC). |
 | `RateDate__c` | Fecha de publicación de la tasa | Date | Sí | Fecha en que el proveedor publicó el tipo de cambio usado. |
@@ -91,7 +91,21 @@ código.
 |---|---|---|---|---|
 | `MaxRequestsPerCall__c` | Máximo de pedidos por llamada | Number(4,0) | 200 | Cantidad máxima de pedidos aceptados en una llamada (FR-004). |
 | `CalloutTimeoutMs__c` | Timeout del proveedor (ms) | Number(6,0) | 10000 | Tiempo máximo de espera al proveedor de tipo de cambio (máximo 120000). |
-| `NamedCredentialName__c` | Named Credential del proveedor | Text(80) | FrankfurterApi | Nombre de la Named Credential usada para el callout. |
+| `NamedCredentialName__c` | Named Credential del proveedor | Text(80) | CurrencyApi | Nombre de la Named Credential usada para el callout. |
+
+---
+
+## QuoteCurrency__mdt: "Moneda del Cotizador"
+
+**Descripción**: Monedas que el Cotizador acepta, como moneda original o destino. Un administrador las
+habilita o deshabilita sin desplegar código (FR-025).
+
+| API Name | Label | Tipo | Descripción |
+|---|---|---|---|
+| `DeveloperName` (estándar) | Nombre | — | Código ISO 4217 de 3 letras, en mayúsculas (ej. ARS). |
+| `IsActive__c` | Activa | Checkbox (default true) | Si está desmarcada, la moneda no se puede cotizar. |
+
+Registros iniciales: USD, EUR, ARS, GBP, BRL, CLP, MXN, UYU.
 
 ---
 
@@ -120,6 +134,6 @@ Contrato JSON exacto: [contracts/opportunity-quotes-api.md](./contracts/opportun
 | `OPPORTUNITY_NOT_FOUND` | 400 | No existe o no es visible | "Pedido 2: la Oportunidad indicada no existe." |
 | `OPPORTUNITY_WITHOUT_AMOUNT` | 400 | `Amount` vacío | "Pedido 1: la Oportunidad no tiene monto para cotizar." |
 | `INVALID_CURRENCY_CODE` | 400 | Moneda vacía o que no son 3 letras | "Pedido 1: 'euro' no es un código de moneda válido (use 3 letras, por ejemplo EUR)." |
-| `UNSUPPORTED_CURRENCY` | 400 | Moneda original o destino no soportada por el proveedor | "Pedido 1: la moneda ARS no está soportada por el proveedor de tipo de cambio." |
+| `UNSUPPORTED_CURRENCY` | 400 | Moneda original o destino no habilitada en `QuoteCurrency__mdt`, o no publicada por el proveedor | "Pedido 1: la moneda destino BTC no está habilitada en el Cotizador." / "…no es publicada por el proveedor de tipo de cambio." |
 | `EXCHANGE_RATE_UNAVAILABLE` | 500 | Timeout, 5xx, respuesta ilegible | "El tipo de cambio no está disponible en este momento. Intente nuevamente más tarde." |
 | `INTERNAL_ERROR` | 500 | Cualquier error inesperado (incluye fallo del insert) | "Ocurrió un error inesperado al procesar la cotización." |

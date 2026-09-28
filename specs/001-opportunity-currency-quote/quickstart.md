@@ -7,7 +7,7 @@ Guía para probar de punta a punta que la feature funciona. Los comandos se corr
 
 1. Org `sdd-dev` autenticada: `sf org display --target-org sdd-dev`.
 2. Multi-Currency habilitado con **USD y EUR activas** (Setup → Company Information → Currencies).
-   Opcional: activar una moneda no soportada por Frankfurter (por ejemplo, ARS) para probar ese error.
+   Con ARS activa se puede probar una Oportunidad en pesos (el proveedor currency-api la publica).
 3. Agentforce habilitado, con el agente de empleados (Agentforce Employee Agent) activo.
 
 ## 1. Desplegar y asignar permisos
@@ -28,13 +28,14 @@ sf apex run test --target-org sdd-dev --code-coverage --result-format human --wa
 ```
 
 **Esperado**: 100% de los tests pasan y cada clase tiene 85% de cobertura o más. Ningún test llama a
-Frankfurter (todos usan `ExchangeRateCalloutMock`).
+al proveedor real (todos usan `ExchangeRateCalloutMock`).
 
 ## 3. Datos de prueba
 
 Crear dos Oportunidades (desde la UI o con `sf data create record`) y anotar sus Ids:
 - **OPP_USD**: Amount 10000, CurrencyIsoCode USD.
 - **OPP_SIN_MONTO**: Amount vacío.
+- **OPP_ARS**: Amount 500000, CurrencyIsoCode ARS.
 
 ## 4. Canal externo (Historia 1)
 
@@ -56,9 +57,11 @@ curl -s -X POST "$INSTANCE_URL/services/apexrest/v1/opportunity-quotes" \
 | 4.6 | OPP_SIN_MONTO → `EUR` | 400 `OPPORTUNITY_WITHOUT_AMOUNT` |
 | 4.7 | `[OPP_USD→EUR, Id inexistente, OPP_USD→GBP]` | 400, `requestIndex` 2, **ninguna** cotización creada |
 | 4.8 | `{"requests":[]}` | 400 `EMPTY_REQUEST_LIST` |
+| 4.9 | OPP_ARS → `USD` | 200; tipo de cambio ARS→USD del día (≈ 0,00066) |
+| 4.10 | OPP_USD → `BTC` | 400 `UNSUPPORTED_CURRENCY` ("no está habilitada en el Cotizador") |
 
 El caso "proveedor caído" (500 `EXCHANGE_RATE_UNAVAILABLE`) se valida con los tests con mock. Para
-verlo en vivo, cambiar temporalmente la URL de la Named Credential `FrankfurterApi` a un host
+verlo en vivo, cambiar temporalmente la URL de la Named Credential `CurrencyApi` a un host
 inexistente.
 
 Contrato completo: [contracts/opportunity-quotes-api.md](./contracts/opportunity-quotes-api.md).

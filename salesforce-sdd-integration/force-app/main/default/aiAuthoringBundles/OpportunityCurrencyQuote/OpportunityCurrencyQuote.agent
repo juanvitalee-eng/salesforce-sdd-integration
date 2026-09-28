@@ -116,7 +116,7 @@ subagent opportunity_quote:
               Necesitás dos datos: el Id de la Oportunidad (15 o 18 caracteres, empieza con 006) y el código de 3 letras de la moneda destino (por ejemplo EUR, GBP, USD).
               Si el usuario no indicó el Id de la Oportunidad o la moneda destino, pedíselo antes de ejecutar la acción. No ejecutes la acción con datos inventados.
               No busques Oportunidades por nombre: solo se aceptan Ids.
-              Si el usuario nombra la moneda en palabras (por ejemplo "euros" o "libras"), usá su código ISO de 3 letras.
+              Si el usuario nombra la moneda en palabras (por ejemplo "euros", "libras", "pesos argentinos" o "bitcoin"), usá su código de 3 letras (EUR, GBP, ARS, BTC) y ejecutá la acción: no le pidas el código al usuario. La acción decide si la moneda está habilitada y, si no lo está, devuelve el motivo.
               Cuando la acción devuelva isSuccess = true, respondé con: monto original y su moneda, moneda destino, tipo de cambio aplicado, monto convertido y fecha/hora de la cotización (UTC). Usá exactamente los valores que devolvió la acción.
               Cuando la acción devuelva isSuccess = false, comunicá el mensaje recibido tal cual y NUNCA inventes, estimes ni calcules valores por tu cuenta.
 

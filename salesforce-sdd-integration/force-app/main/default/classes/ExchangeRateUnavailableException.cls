@@ -1,7 +1,7 @@
 /**
  * ExchangeRateUnavailableException
  *
- * Qué hace: representa que el proveedor de tipo de cambio (Frankfurter) no respondió, tardó demasiado
+ * Qué hace: representa que el proveedor de tipo de cambio (currency-api) no respondió, tardó demasiado
  * o respondió con un error (HTTP 500, código EXCHANGE_RATE_UNAVAILABLE).
  *
  * Por qué existe: en ese caso no hay que inventar ni estimar ningún valor (FR-007); el llamador

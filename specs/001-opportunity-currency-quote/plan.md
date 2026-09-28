@@ -10,7 +10,7 @@ Un sistema externo envía por POST una lista de pedidos (Id de Oportunidad + mon
 endpoint Apex REST, y un usuario interno pide lo mismo al agente de Agentforce. Ambos canales son
 "adaptadores" delgados que llaman a **una única clase Service** (`OpportunityQuoteService`). El
 Service valida todos los pedidos, lee las Oportunidades con una sola consulta, obtiene los tipos de
-cambio de **Frankfurter** con **un callout por moneda base distinta** (no uno por pedido), calcula
+cambio de **currency-api** (cambio 2026-09-28: reemplaza a Frankfurter, que no publica ARS) con **un callout por moneda base distinta** (no uno por pedido), calcula
 el monto convertido truncado a 2 decimales y, solo si todos los pedidos salieron bien, inserta los
 registros `CurrencyQuote__c` en un único DML. Si algo falla, no se inserta ninguna cotización, se
 guarda un registro en el log genérico `ErrorLog__c` y el adaptador traduce el error a HTTP 400/500
@@ -21,8 +21,8 @@ guarda un registro en el log genérico `ErrorLog__c` y el adaptador traduce el e
 **Language/Version**: Apex, API 67.0 (`sourceApiVersion` de `sfdx-project.json`)
 
 **Primary Dependencies**: Salesforce Platform (Apex REST, Invocable Actions, Named/External
-Credentials, Custom Metadata Types), Agentforce (Agent Actions + Topics), API externa Frankfurter
-(`https://api.frankfurter.dev/v1`)
+Credentials, Custom Metadata Types), Agentforce (Agent Actions + Topics), API externa currency-api
+(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1`)
 
 **Storage**: Objetos custom de Salesforce: `CurrencyQuote__c` (historial), `ErrorLog__c` (log
 genérico); Custom Metadata `OpportunityQuoteSetting__mdt` (configuración)
@@ -61,7 +61,7 @@ log
 | 7 | Wrappers tipados para REST | `QuoteModels` (clases internas `QuoteRequest`, `QuoteResult`, `BatchRequest`, `BatchResponse`, `ErrorResponse`) | ✅ |
 | 8 | Excepciones propias del dominio | `QuoteException` (base) → `QuoteValidationException` (400), `ExchangeRateUnavailableException` (500); cualquier excepción inesperada se envuelve como `INTERNAL_ERROR` | ✅ |
 | 9 | Todas las clases `with sharing` | Todas declaran `with sharing`; el SOQL usa `WITH USER_MODE` | ✅ |
-| 10 | Nada hardcodeado | Endpoint en Named Credential `FrankfurterApi`; máximo de pedidos y timeout en `OpportunityQuoteSetting__mdt` | ✅ |
+| 10 | Nada hardcodeado | Endpoint en Named Credential `CurrencyApi`; máximo de pedidos y timeout en `OpportunityQuoteSetting__mdt`; monedas habilitadas en `QuoteCurrency__mdt` | ✅ |
 | 11 | Trabajo secundario en Queueable | No hay trabajo secundario en v1 (el log de errores es parte de la respuesta, no una notificación) | ✅ N/A |
 | 12 | Nunca modificar la Oportunidad | Solo se lee; no hay ningún DML sobre `Opportunity` | ✅ |
 | 13 | Tests ≥ 85% con `HttpCalloutMock` | `ExchangeRateCalloutMock` configurable; ningún test llama a la API real | ✅ |
@@ -101,7 +101,7 @@ salesforce-sdd-integration/force-app/main/default/
 │   ├── OpportunityQuoteResource.cls        # Capa REST: POST /v1/opportunity-quotes
 │   ├── OpportunityQuoteAction.cls          # Adaptador Agentforce (@InvocableMethod)
 │   ├── OpportunityQuoteService.cls         # Lógica de negocio única (ambos canales)
-│   ├── ExchangeRateClient.cls              # Único punto de callout a Frankfurter
+│   ├── ExchangeRateClient.cls              # Único punto de callout al proveedor (currency-api)
 │   ├── QuoteModels.cls                     # Wrappers tipados de request/response
 │   ├── QuoteException.cls                  # Excepción base del dominio (virtual)
 │   ├── QuoteValidationException.cls        # Errores de pedido (400)
@@ -114,10 +114,11 @@ salesforce-sdd-integration/force-app/main/default/
 ├── objects/
 │   ├── CurrencyQuote__c/  (object + fields/)
 │   ├── ErrorLog__c/       (object + fields/)
-│   └── OpportunityQuoteSetting__mdt/ (object + fields/)
-├── customMetadata/OpportunityQuoteSetting.Default.md-meta.xml
-├── externalCredentials/FrankfurterNoAuth.externalCredential-meta.xml
-├── namedCredentials/FrankfurterApi.namedCredential-meta.xml
+│   ├── OpportunityQuoteSetting__mdt/ (object + fields/)
+│   └── QuoteCurrency__mdt/ (object + fields/)
+├── customMetadata/OpportunityQuoteSetting.Default.md-meta.xml, QuoteCurrency.<ISO>.md-meta.xml
+├── externalCredentials/CurrencyApiNoAuth.externalCredential-meta.xml
+├── namedCredentials/CurrencyApi.namedCredential-meta.xml
 ├── permissionsets/
 │   ├── OpportunityQuoteUser.permissionset-meta.xml    # Integración + usuarios del agente
 │   └── CurrencyQuoteAuditor.permissionset-meta.xml    # Solo lectura del historial

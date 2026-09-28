@@ -29,6 +29,8 @@ El agente se creó con el **nuevo Agentforce Builder (Agent Script)**, no con To
 
 - Fuente versionada: `force-app/main/default/aiAuthoringBundles/OpportunityCurrencyQuote/OpportunityCurrencyQuote.agent`
   (subagent `opportunity_quote` + acción `quote_opportunity` con `target: "apex://OpportunityQuoteAction"`).
+- `bots/` y `genAiPlannerBundles/` están en `.forceignore`: los genera el publish y Salesforce no permite
+  desplegarlos sobre un agente activo. La única fuente versionada es el `.agent`.
 - Flujo: editar el `.agent` → `sf agent validate authoring-bundle` → `sf agent publish authoring-bundle`
   → `sf agent activate`. El publish genera y trae al repo `bots/` y `genAiPlannerBundles/`.
 - Es un agente de tipo **Service Agent**: corre como su propio usuario (`opportunitycurrencyquote@...ext`,

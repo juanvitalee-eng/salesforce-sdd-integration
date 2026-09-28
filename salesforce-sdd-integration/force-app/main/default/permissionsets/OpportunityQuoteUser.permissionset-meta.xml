@@ -11,7 +11,7 @@
     <description>Cotizar Oportunidades desde el canal externo o el agente: lee Oportunidades y crea cotizaciones. No edita ni borra cotizaciones ni ve el log de errores.</description>
     <externalCredentialPrincipalAccesses>
         <enabled>true</enabled>
-        <externalCredentialPrincipal>FrankfurterNoAuth-FrankfurterPrincipal</externalCredentialPrincipal>
+        <externalCredentialPrincipal>CurrencyApiNoAuth-CurrencyApiPrincipal</externalCredentialPrincipal>
     </externalCredentialPrincipalAccesses>
     <fieldPermissions>
         <editable>false</editable>
