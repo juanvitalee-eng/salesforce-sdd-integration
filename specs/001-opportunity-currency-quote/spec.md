@@ -36,6 +36,7 @@ Un sistema externo (ERP/CRM) envía a Salesforce uno o más pedidos de cotizaci�
 4. **Given** que el proveedor de tipo de cambio no responde o responde con error, **When** el sistema externo pide una cotización, **Then** recibe un mensaje de error claro indicando que el tipo de cambio no está disponible, código 500, ningún dato inventado, y no se crea ningún registro histórico.
 5. **Given** una lista con varios pedidos válidos, **When** el sistema externo la envía en una sola llamada, **Then** recibe un resultado por cada pedido, en el mismo orden en que los envió.
 6. **Given** una lista de 3 pedidos donde el segundo tiene un Id inexistente, **When** el sistema externo la envía, **Then** recibe código 400 con un mensaje claro que identifica el pedido 2 como el que falló, ninguna cotización y ningún registro histórico creado (ni siquiera para los pedidos 1 y 3).
+7. **Given** una Oportunidad cuya moneda original no es soportada por el proveedor (por ejemplo, ARS), **When** el sistema externo pide la cotización, **Then** recibe un mensaje claro indicando que la moneda original no está soportada y código 400, sin registro histórico.
 
 ---
 
@@ -100,7 +101,7 @@ El responsable de auditoría puede consultar en Salesforce un registro históric
 **Validaciones y errores**
 
 - **FR-005**: Si el Id de Oportunidad no existe, no tiene un formato válido o la Oportunidad no es visible para quien consulta, el sistema DEBE responder con un mensaje claro en lenguaje de negocio y código de pedido inválido (HTTP 400).
-- **FR-006**: Si la moneda destino no es soportada por el proveedor de tipo de cambio, el sistema DEBE responder con un mensaje claro y código de pedido inválido (HTTP 400).
+- **FR-006**: Si la moneda destino o la moneda original de la Oportunidad no es soportada por el proveedor de tipo de cambio, el sistema DEBE responder con un mensaje claro y código de pedido inválido (HTTP 400).
 - **FR-007**: Si el proveedor de tipo de cambio no responde, tarda más del tiempo máximo permitido o responde con error, el sistema DEBE responder con un mensaje claro y código de error del servicio (HTTP 500), sin devolver ningún valor estimado, guardado o inventado.
 - **FR-008**: Los mensajes de error NUNCA DEBEN exponer detalles técnicos internos (trazas, nombres internos, mensajes crudos de la plataforma).
 - **FR-009**: Si la Oportunidad no tiene monto, el sistema DEBE responder con un error claro de pedido inválido (HTTP 400).

@@ -110,7 +110,7 @@ salesforce-sdd-integration/force-app/main/default/
 │   ├── OpportunityQuoteSettings.cls        # Lee OpportunityQuoteSetting__mdt
 │   └── tests: OpportunityQuoteResourceTest, OpportunityQuoteActionTest,
 │       OpportunityQuoteServiceTest, ExchangeRateClientTest, ErrorLoggerTest,
-│       ExchangeRateCalloutMock, QuoteTestDataFactory
+│       CurrencyQuoteAuditTest, ExchangeRateCalloutMock, QuoteTestDataFactory
 ├── objects/
 │   ├── CurrencyQuote__c/  (object + fields/)
 │   ├── ErrorLog__c/       (object + fields/)
@@ -121,7 +121,7 @@ salesforce-sdd-integration/force-app/main/default/
 ├── permissionsets/
 │   ├── OpportunityQuoteUser.permissionset-meta.xml    # Integración + usuarios del agente
 │   └── CurrencyQuoteAuditor.permissionset-meta.xml    # Solo lectura del historial
-└── genAiFunctions/, genAiPlugins/ # Agent Action y Topic (se configuran en Agentforce
+└── genAiFunctions/, genAiPlugins/, genAiPlannerBundles/ # Agent Action y Topic (se configuran en Agentforce
                                     # Builder y se recuperan con `sf project retrieve`)
 ```
 

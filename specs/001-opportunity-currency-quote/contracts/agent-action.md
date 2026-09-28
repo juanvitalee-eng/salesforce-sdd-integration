@@ -39,4 +39,4 @@ La acción **nunca** lanza excepciones hacia el agente: los errores vuelven como
        inventes ni estimes valores."
     4. "No busques Oportunidades por nombre; solo se aceptan Ids."
 - Recuperar la metadata al repo:
-  `sf project retrieve start --metadata GenAiFunction GenAiPlugin --target-org sdd-dev`
+  `sf project retrieve start --metadata GenAiFunction GenAiPlugin GenAiPlannerBundle --target-org sdd-dev`

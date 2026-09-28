@@ -23,7 +23,7 @@ sf org assign permset --name CurrencyQuoteAuditor --target-org sdd-dev
 ```bash
 sf apex run test --target-org sdd-dev --code-coverage --result-format human --wait 10 \
   --tests OpportunityQuoteServiceTest OpportunityQuoteResourceTest OpportunityQuoteActionTest \
-          ExchangeRateClientTest ErrorLoggerTest
+          ExchangeRateClientTest ErrorLoggerTest CurrencyQuoteAuditTest
 ```
 
 **Esperado**: 100% de los tests pasan y cada clase tiene 85% de cobertura o más. Ningún test llama a

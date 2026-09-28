@@ -38,7 +38,7 @@ moneda. Se crea desde el canal externo o desde el agente, y nunca modifica la Op
 | `OriginalCurrency__c` | Moneda original | Text(3) | Sí | Código ISO 4217 de la moneda de la Oportunidad (su CurrencyIsoCode). |
 | `TargetCurrency__c` | Moneda destino | Text(3) | Sí | Código ISO 4217 de la moneda a la que se convirtió. |
 | `ExchangeRate__c` | Tipo de cambio | Number(18,6) | Sí | Tipo de cambio informado por el proveedor (1 moneda original = X moneda destino). |
-| `ConvertedAmount__c` | Monto convertido | Number(16,2) | Sí | Monto original × tipo de cambio, truncado a 2 decimales. |
+| `ConvertedAmount__c` | Monto convertido | Number(18,2) | Sí | Monto original × tipo de cambio, truncado a 2 decimales. |
 | `QuotedAt__c` | Fecha/hora de cotización | DateTime | Sí | Momento en que el sistema obtuvo el tipo de cambio (UTC). |
 | `RateDate__c` | Fecha de publicación de la tasa | Date | Sí | Fecha en que el proveedor publicó el tipo de cambio usado. |
 | `Channel__c` | Canal de origen | Picklist restringido: `ExternalSystem` ("Sistema externo"), `Agent` ("Agente") | Sí | Canal que pidió la cotización. |
