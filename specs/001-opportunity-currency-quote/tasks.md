@@ -46,8 +46,8 @@ separado.
 
 **Purpose**: dejar el proyecto y la org listos.
 
-- [ ] T001 Crear las carpetas de metadata `FA/classes/`, `FA/objects/`, `FA/customMetadata/`, `FA/externalCredentials/`, `FA/namedCredentials/`, `FA/permissionsets/`, `FA/layouts/` bajo `salesforce-sdd-integration/force-app/main/default/`
-- [ ] T002 Verificar los prerrequisitos de la org: `sf org display --target-org sdd-dev` responde, y Multi-Currency está habilitado con **USD y EUR activas** (consulta: `sf data query -q "SELECT IsoCode, IsActive FROM CurrencyType" --target-org sdd-dev`). Si falta alguna moneda, detenerse y avisar al usuario
+- [X] T001 Crear las carpetas de metadata `FA/classes/`, `FA/objects/`, `FA/customMetadata/`, `FA/externalCredentials/`, `FA/namedCredentials/`, `FA/permissionsets/`, `FA/layouts/` bajo `salesforce-sdd-integration/force-app/main/default/`
+- [X] T002 Verificar los prerrequisitos de la org: `sf org display --target-org sdd-dev` responde, y Multi-Currency está habilitado con **USD y EUR activas** (consulta: `sf data query -q "SELECT IsoCode, IsActive FROM CurrencyType" --target-org sdd-dev`). Si falta alguna moneda, detenerse y avisar al usuario
 
 ---
 
@@ -59,17 +59,17 @@ separado.
 
 ### Configuración y credenciales
 
-- [ ] T003 [P] Crear el Custom Metadata Type `OpportunityQuoteSetting__mdt` (Label "Configuración del Cotizador", descripción "Parámetros de negocio del Cotizador de Oportunidades, modificables sin desplegar código.") en `FA/objects/OpportunityQuoteSetting__mdt/OpportunityQuoteSetting__mdt.object-meta.xml`, con los campos en `FA/objects/OpportunityQuoteSetting__mdt/fields/`: `MaxRequestsPerCall__c` (Label "Máximo de pedidos por llamada", Number(4,0)), `CalloutTimeoutMs__c` (Label "Timeout del proveedor (ms)", Number(6,0), descripción que indique máximo 120000), `NamedCredentialName__c` (Label "Named Credential del proveedor", Text(80)). Las descripciones se copian de [data-model.md](./data-model.md)
-- [ ] T004 Crear el registro `Default` en `FA/customMetadata/OpportunityQuoteSetting.Default.md-meta.xml` con `MaxRequestsPerCall__c = 200`, `CalloutTimeoutMs__c = 10000`, `NamedCredentialName__c = FrankfurterApi` (depende de T003)
-- [ ] T005 [P] Crear la External Credential `FrankfurterNoAuth` (Label "Frankfurter - Sin autenticación", `authenticationProtocol` = `NoAuthentication`, un principal de tipo `NamedPrincipal` llamado `FrankfurterPrincipal`) en `FA/externalCredentials/FrankfurterNoAuth.externalCredential-meta.xml`. Desplegar **solo** esta credencial primero (`sf project deploy start --metadata ExternalCredential:FrankfurterNoAuth --target-org sdd-dev`). **Plan B** si el deploy rechaza `NoAuthentication`: crearla en Setup (Named Credentials → External Credentials → Authentication Protocol: No Authentication), recuperarla con `sf project retrieve start --metadata ExternalCredential:FrankfurterNoAuth --target-org sdd-dev` y versionar ese XML (research §2)
-- [ ] T006 Crear la Named Credential `FrankfurterApi` (Label "API Frankfurter", tipo `SecuredEndpoint`, URL `https://api.frankfurter.dev/v1`, External Credential `FrankfurterNoAuth`, `generateAuthorizationHeader` = false) en `FA/namedCredentials/FrankfurterApi.namedCredential-meta.xml` (depende de T005)
+- [X] T003 [P] Crear el Custom Metadata Type `OpportunityQuoteSetting__mdt` (Label "Configuración del Cotizador", descripción "Parámetros de negocio del Cotizador de Oportunidades, modificables sin desplegar código.") en `FA/objects/OpportunityQuoteSetting__mdt/OpportunityQuoteSetting__mdt.object-meta.xml`, con los campos en `FA/objects/OpportunityQuoteSetting__mdt/fields/`: `MaxRequestsPerCall__c` (Label "Máximo de pedidos por llamada", Number(4,0)), `CalloutTimeoutMs__c` (Label "Timeout del proveedor (ms)", Number(6,0), descripción que indique máximo 120000), `NamedCredentialName__c` (Label "Named Credential del proveedor", Text(80)). Las descripciones se copian de [data-model.md](./data-model.md)
+- [X] T004 Crear el registro `Default` en `FA/customMetadata/OpportunityQuoteSetting.Default.md-meta.xml` con `MaxRequestsPerCall__c = 200`, `CalloutTimeoutMs__c = 10000`, `NamedCredentialName__c = FrankfurterApi` (depende de T003)
+- [X] T005 [P] Crear la External Credential `FrankfurterNoAuth` (Label "Frankfurter - Sin autenticación", `authenticationProtocol` = `NoAuthentication`, un principal de tipo `NamedPrincipal` llamado `FrankfurterPrincipal`) en `FA/externalCredentials/FrankfurterNoAuth.externalCredential-meta.xml`. Desplegar **solo** esta credencial primero (`sf project deploy start --metadata ExternalCredential:FrankfurterNoAuth --target-org sdd-dev`). **Plan B** si el deploy rechaza `NoAuthentication`: crearla en Setup (Named Credentials → External Credentials → Authentication Protocol: No Authentication), recuperarla con `sf project retrieve start --metadata ExternalCredential:FrankfurterNoAuth --target-org sdd-dev` y versionar ese XML (research §2)
+- [X] T006 Crear la Named Credential `FrankfurterApi` (Label "API Frankfurter", tipo `SecuredEndpoint`, URL `https://api.frankfurter.dev/v1`, External Credential `FrankfurterNoAuth`, `generateAuthorizationHeader` = false) en `FA/namedCredentials/FrankfurterApi.namedCredential-meta.xml` (depende de T005)
 
 ### Objetos de datos
 
-- [ ] T007 [P] Crear el objeto `ErrorLog__c` en `FA/objects/ErrorLog__c/ErrorLog__c.object-meta.xml`: Label "Log de Errores", plural "Logs de Errores", Name Auto Number `ERR-{000000}`, `sharingModel` = `Private`, descripción de [data-model.md](./data-model.md)
-- [ ] T008 [P] Crear los campos de `ErrorLog__c` en `FA/objects/ErrorLog__c/fields/`, con Label y descripción de [data-model.md](./data-model.md): `OccurredAt__c` DateTime requerido; `Source__c` Text(80) requerido; `Channel__c` Text(40); `ErrorCode__c` Text(60) requerido; `StatusCode__c` Number(3,0); `BusinessMessage__c` Long Text Area(2000) requerido; `TechnicalDetail__c` Long Text Area(32768); `RelatedRecordId__c` Text(18); `Context__c` Long Text Area(5000)
-- [ ] T009 [P] Crear el objeto `CurrencyQuote__c` en `FA/objects/CurrencyQuote__c/CurrencyQuote__c.object-meta.xml`: Label "Cotización de Moneda", plural "Cotizaciones de Moneda", Name Auto Number `CQ-{000000}`, `sharingModel` = `Read` (Public Read Only), `enableReports` = true, `enableHistory` = false, descripción de [data-model.md](./data-model.md)
-- [ ] T010 [P] Crear los campos de `CurrencyQuote__c` en `FA/objects/CurrencyQuote__c/fields/`, todos `required = true` y con Label y descripción de [data-model.md](./data-model.md):
+- [X] T007 [P] Crear el objeto `ErrorLog__c` en `FA/objects/ErrorLog__c/ErrorLog__c.object-meta.xml`: Label "Log de Errores", plural "Logs de Errores", Name Auto Number `ERR-{000000}`, `sharingModel` = `Private`, descripción de [data-model.md](./data-model.md)
+- [X] T008 [P] Crear los campos de `ErrorLog__c` en `FA/objects/ErrorLog__c/fields/`, con Label y descripción de [data-model.md](./data-model.md): `OccurredAt__c` DateTime requerido; `Source__c` Text(80) requerido; `Channel__c` Text(40); `ErrorCode__c` Text(60) requerido; `StatusCode__c` Number(3,0); `BusinessMessage__c` Long Text Area(2000) requerido; `TechnicalDetail__c` Long Text Area(32768); `RelatedRecordId__c` Text(18); `Context__c` Long Text Area(5000)
+- [X] T009 [P] Crear el objeto `CurrencyQuote__c` en `FA/objects/CurrencyQuote__c/CurrencyQuote__c.object-meta.xml`: Label "Cotización de Moneda", plural "Cotizaciones de Moneda", Name Auto Number `CQ-{000000}`, `sharingModel` = `Read` (Public Read Only), `enableReports` = true, `enableHistory` = false, descripción de [data-model.md](./data-model.md)
+- [X] T010 [P] Crear los campos de `CurrencyQuote__c` en `FA/objects/CurrencyQuote__c/fields/`, todos `required = true` y con Label y descripción de [data-model.md](./data-model.md):
   - `Opportunity__c`: Lookup(Opportunity), `deleteConstraint` = `Restrict`, relationshipName `CurrencyQuotes`, relationshipLabel "Cotizaciones de Moneda".
   - Montos y tasa: `OriginalAmount__c` Number(16,2); `ExchangeRate__c` Number(18,6); `ConvertedAmount__c` **Number(18,2)**.
   - Monedas: `OriginalCurrency__c` Text(3); `TargetCurrency__c` Text(3).
@@ -79,7 +79,7 @@ separado.
 
 ### Log de errores genérico
 
-- [ ] T011 Crear `ErrorLogger` en `FA/classes/ErrorLogger.cls`:
+- [X] T011 Crear `ErrorLogger` en `FA/classes/ErrorLogger.cls`:
   - Clase interna `Entry` (source, channel, errorCode, statusCode, businessMessage, technicalDetail, relatedRecordId, context).
   - Método `public static void log(List<Entry> entries)` que arma los `ErrorLog__c` con `OccurredAt__c = Datetime.now()`. **Antes de insertar, recorta cada campo de texto a su largo máximo** (con `Schema.SObjectType.ErrorLog__c.fields.<Campo>.getLength()` y `String.abbreviate`), para que un dato largo nunca impida guardar el log. Inserta con `Database.insert(records, AccessLevel.SYSTEM_MODE)` (research §6).
   - Si el insert falla igual, **nunca** lanza una excepción: la atrapa y hace `System.debug`.
@@ -88,28 +88,28 @@ separado.
 
 ### Excepciones y wrappers
 
-- [ ] T012 [P] Crear `QuoteException` en `FA/classes/QuoteException.cls`: `public virtual with sharing class QuoteException extends Exception`, con las propiedades `errorCode`, `httpStatus` (Integer), `requestIndex` (Integer, 1-based, nullable), `opportunityId` (String) y `technicalDetail`, más constantes `public static final String` para los 10 códigos del catálogo de [data-model.md](./data-model.md#catálogo-de-códigos-de-error) (`INVALID_REQUEST_BODY`, `EMPTY_REQUEST_LIST`, `REQUEST_LIMIT_EXCEEDED`, `INVALID_OPPORTUNITY_ID`, `OPPORTUNITY_NOT_FOUND`, `OPPORTUNITY_WITHOUT_AMOUNT`, `INVALID_CURRENCY_CODE`, `UNSUPPORTED_CURRENCY`, `EXCHANGE_RATE_UNAVAILABLE`, `INTERNAL_ERROR`) y un método de fábrica que fija código, mensaje de negocio, status, posición e Id
-- [ ] T013 [P] Crear `QuoteValidationException extends QuoteException` (httpStatus 400) en `FA/classes/QuoteValidationException.cls` (depende de T012)
-- [ ] T014 [P] Crear `ExchangeRateUnavailableException extends QuoteException` (httpStatus 500, código `EXCHANGE_RATE_UNAVAILABLE`) en `FA/classes/ExchangeRateUnavailableException.cls` (depende de T012)
-- [ ] T015 [P] Crear `QuoteModels` en `FA/classes/QuoteModels.cls` con las clases internas del contrato [opportunity-quotes-api.md](./contracts/opportunity-quotes-api.md): `QuoteRequest` (opportunityId, targetCurrency), `BatchRequest` (List<QuoteRequest> requests), `QuoteResult` (opportunityId, originalAmount, originalCurrency, targetCurrency, exchangeRate, convertedAmount, quotedAt Datetime, rateDate Date), `BatchResponse` (List<QuoteResult> quotes), `ErrorResponse` (ErrorDetail error), `ErrorDetail` (code, message, requestIndex, opportunityId). Los nombres de propiedad deben coincidir **exactamente** con el JSON del contrato
-- [ ] T016 [P] Crear `OpportunityQuoteSettings` en `FA/classes/OpportunityQuoteSettings.cls`: lee `OpportunityQuoteSetting__mdt.getInstance('Default')` y expone `maxRequestsPerCall()`, `calloutTimeoutMs()` y `namedCredentialName()`, con valores por defecto 200 / 10000 / 'FrankfurterApi' si el registro no existe. Agregar un `@TestVisible static OpportunityQuoteSetting__mdt testOverride` para que los tests puedan simular otra configuración
+- [X] T012 [P] Crear `QuoteException` en `FA/classes/QuoteException.cls`: `public virtual with sharing class QuoteException extends Exception`, con las propiedades `errorCode`, `httpStatus` (Integer), `requestIndex` (Integer, 1-based, nullable), `opportunityId` (String) y `technicalDetail`, más constantes `public static final String` para los 10 códigos del catálogo de [data-model.md](./data-model.md#catálogo-de-códigos-de-error) (`INVALID_REQUEST_BODY`, `EMPTY_REQUEST_LIST`, `REQUEST_LIMIT_EXCEEDED`, `INVALID_OPPORTUNITY_ID`, `OPPORTUNITY_NOT_FOUND`, `OPPORTUNITY_WITHOUT_AMOUNT`, `INVALID_CURRENCY_CODE`, `UNSUPPORTED_CURRENCY`, `EXCHANGE_RATE_UNAVAILABLE`, `INTERNAL_ERROR`) y un método de fábrica que fija código, mensaje de negocio, status, posición e Id
+- [X] T013 [P] Crear `QuoteValidationException extends QuoteException` (httpStatus 400) en `FA/classes/QuoteValidationException.cls` (depende de T012)
+- [X] T014 [P] Crear `ExchangeRateUnavailableException extends QuoteException` (httpStatus 500, código `EXCHANGE_RATE_UNAVAILABLE`) en `FA/classes/ExchangeRateUnavailableException.cls` (depende de T012)
+- [X] T015 [P] Crear `QuoteModels` en `FA/classes/QuoteModels.cls` con las clases internas del contrato [opportunity-quotes-api.md](./contracts/opportunity-quotes-api.md): `QuoteRequest` (opportunityId, targetCurrency), `BatchRequest` (List<QuoteRequest> requests), `QuoteResult` (opportunityId, originalAmount, originalCurrency, targetCurrency, exchangeRate, convertedAmount, quotedAt Datetime, rateDate Date), `BatchResponse` (List<QuoteResult> quotes), `ErrorResponse` (ErrorDetail error), `ErrorDetail` (code, message, requestIndex, opportunityId). Los nombres de propiedad deben coincidir **exactamente** con el JSON del contrato
+- [X] T016 [P] Crear `OpportunityQuoteSettings` en `FA/classes/OpportunityQuoteSettings.cls`: lee `OpportunityQuoteSetting__mdt.getInstance('Default')` y expone `maxRequestsPerCall()`, `calloutTimeoutMs()` y `namedCredentialName()`, con valores por defecto 200 / 10000 / 'FrankfurterApi' si el registro no existe. Agregar un `@TestVisible static OpportunityQuoteSetting__mdt testOverride` para que los tests puedan simular otra configuración
 
 ### Cliente del proveedor (integración)
 
-- [ ] T017 Crear `ExchangeRateClient` en `FA/classes/ExchangeRateClient.cls`:
+- [X] T017 Crear `ExchangeRateClient` en `FA/classes/ExchangeRateClient.cls`:
   - Clase interna `RateTable` (baseCurrency, isSupported Boolean, rateDate Date, `Map<String, Decimal> rates`, fetchedAt Datetime).
   - Método `public static Map<String, RateTable> getRates(Set<String> baseCurrencies)`, que hace **un** `GET callout:<namedCredentialName>/latest?base=<CODE>` (sin `symbols`) por moneda base, con el timeout de `OpportunityQuoteSettings`.
   - Reglas (research §1): 200 → parsear `date` y `rates` con un wrapper tipado (no `Map<String,Object>`), `isSupported = true`, `fetchedAt = Datetime.now()`; 404 → `isSupported = false`; cualquier otro status, `CalloutException` (timeout) o JSON ilegible → lanzar `ExchangeRateUnavailableException` con `technicalDetail` (status + body) (depende de T006, T014, T016)
-- [ ] T018 [P] Crear `ExchangeRateCalloutMock implements HttpCalloutMock` (`@IsTest`) en `FA/classes/ExchangeRateCalloutMock.cls`. Se configura por moneda base (`withRates(base, date, Map<String,Decimal>)`, `withStatus(base, code, body)`, `withTimeout(base)`, que lanza `CalloutException`) y cuenta cuántas llamadas recibió (`callCount`) para verificar "un callout por moneda base"
-- [ ] T019 [P] Crear `QuoteTestDataFactory` (`@IsTest`) en `FA/classes/QuoteTestDataFactory.cls` con `createOpportunity(Decimal amount, String currencyIsoCode)` y `createOpportunities(...)`, que insertan Oportunidades válidas (Name, StageName, CloseDate, Amount, CurrencyIsoCode). Documentar en un comentario que se usa **antes** de `Test.startTest()` o en `@TestSetup` (ver "Tests con callouts")
-- [ ] T020 [P] Crear `ExchangeRateClientTest` en `FA/classes/ExchangeRateClientTest.cls`, siguiendo "Tests con callouts". Debe cubrir: 200 con tasas; 404 → `isSupported = false`; 500 y 429 → `ExchangeRateUnavailableException`; timeout → `ExchangeRateUnavailableException`; body ilegible → excepción; dos monedas base → exactamente 2 callouts; la URL usa `callout:FrankfurterApi` (depende de T017, T018)
-- [ ] T021 [P] Crear `ErrorLoggerTest` en `FA/classes/ErrorLoggerTest.cls`. Debe verificar:
+- [X] T018 [P] Crear `ExchangeRateCalloutMock implements HttpCalloutMock` (`@IsTest`) en `FA/classes/ExchangeRateCalloutMock.cls`. Se configura por moneda base (`withRates(base, date, Map<String,Decimal>)`, `withStatus(base, code, body)`, `withTimeout(base)`, que lanza `CalloutException`) y cuenta cuántas llamadas recibió (`callCount`) para verificar "un callout por moneda base"
+- [X] T019 [P] Crear `QuoteTestDataFactory` (`@IsTest`) en `FA/classes/QuoteTestDataFactory.cls` con `createOpportunity(Decimal amount, String currencyIsoCode)` y `createOpportunities(...)`, que insertan Oportunidades válidas (Name, StageName, CloseDate, Amount, CurrencyIsoCode). Documentar en un comentario que se usa **antes** de `Test.startTest()` o en `@TestSetup` (ver "Tests con callouts")
+- [X] T020 [P] Crear `ExchangeRateClientTest` en `FA/classes/ExchangeRateClientTest.cls`, siguiendo "Tests con callouts". Debe cubrir: 200 con tasas; 404 → `isSupported = false`; 500 y 429 → `ExchangeRateUnavailableException`; timeout → `ExchangeRateUnavailableException`; body ilegible → excepción; dos monedas base → exactamente 2 callouts; la URL usa `callout:FrankfurterApi` (depende de T017, T018)
+- [X] T021 [P] Crear `ErrorLoggerTest` en `FA/classes/ErrorLoggerTest.cls`. Debe verificar:
   - Se crea un `ErrorLog__c` con todos los campos.
   - Se puede loguear como un usuario sin permisos sobre `ErrorLog__c` (`System.runAs` de un usuario Standard User).
   - Con `businessMessage` de 5000 caracteres y `relatedRecordId` de 30 caracteres, **igual se crea** el `ErrorLog__c`, con los campos recortados.
   - Un fallo de insert no lanza excepción (depende de T011)
-- [ ] T022 Crear el permission set `OpportunityQuoteUser` (Label "Cotizador de Oportunidades - Uso", descripción en español) en `FA/permissionsets/OpportunityQuoteUser.permissionset-meta.xml`, con: Read sobre `Opportunity`, FLS de lectura sobre `Opportunity.Amount`, `objectPermissions` de `CurrencyQuote__c` con Create y Read (**sin** Edit ni Delete; los campos requeridos no llevan `fieldPermissions` porque la plataforma no los admite) y `externalCredentialPrincipalAccesses` para `FrankfurterNoAuth-FrankfurterPrincipal`. **Sin** permisos sobre `ErrorLog__c` (FR-024) (depende de T005, T010)
-- [ ] T023 Desplegar la fase y correr los tests: `sf project deploy start --source-dir force-app --target-org sdd-dev`, luego `sf apex run test --tests ExchangeRateClientTest ErrorLoggerTest --code-coverage --wait 10 --target-org sdd-dev`. Todos deben pasar
+- [X] T022 (Se agregó además el permission set `FA/permissionsets/ErrorLogAdmin.permissionset-meta.xml` para que los administradores vean los campos del log.) Crear el permission set `OpportunityQuoteUser` (Label "Cotizador de Oportunidades - Uso", descripción en español) en `FA/permissionsets/OpportunityQuoteUser.permissionset-meta.xml`, con: Read sobre `Opportunity`, FLS de lectura sobre `Opportunity.Amount`, `objectPermissions` de `CurrencyQuote__c` con Create y Read (**sin** Edit ni Delete; los campos requeridos no llevan `fieldPermissions` porque la plataforma no los admite) y `externalCredentialPrincipalAccesses` para `FrankfurterNoAuth-FrankfurterPrincipal`. **Sin** permisos sobre `ErrorLog__c` (FR-024) (depende de T005, T010)
+- [X] T023 Desplegar la fase y correr los tests: `sf project deploy start --source-dir force-app --target-org sdd-dev`, luego `sf apex run test --tests ExchangeRateClientTest ErrorLoggerTest --code-coverage --wait 10 --target-org sdd-dev`. Todos deben pasar
 
 **Checkpoint**: la base está lista y se pueden empezar las historias.
 
@@ -123,35 +123,35 @@ separado.
 
 ### Implementation for User Story 1
 
-- [ ] T024 [US1] Crear `OpportunityQuoteService` en `FA/classes/OpportunityQuoteService.cls` con las constantes `CHANNEL_EXTERNAL = 'ExternalSystem'`, `CHANNEL_AGENT = 'Agent'` y `SOURCE = 'Cotizador de Oportunidades'`, y el método público `List<QuoteModels.QuoteResult> quote(List<QuoteModels.QuoteRequest> requests, String channel)`. En esta tarea implementar las **etapas 1 y 2** de research §3:
+- [X] T024 [US1] Crear `OpportunityQuoteService` en `FA/classes/OpportunityQuoteService.cls` con las constantes `CHANNEL_EXTERNAL = 'ExternalSystem'`, `CHANNEL_AGENT = 'Agent'` y `SOURCE = 'Cotizador de Oportunidades'`, y el método público `List<QuoteModels.QuoteResult> quote(List<QuoteModels.QuoteRequest> requests, String channel)`. En esta tarea implementar las **etapas 1 y 2** de research §3:
   - Etapa 1: lista null o vacía → `EMPTY_REQUEST_LIST`; más de `maxRequestsPerCall()` → `REQUEST_LIMIT_EXCEEDED`, con el máximo en el mensaje. Ambos cortan de inmediato, sin `requestIndex`.
   - Etapa 2, por pedido: Id vacío, mal formado o cuyo `getSObjectType()` no es `Opportunity` → `INVALID_OPPORTUNITY_ID`; moneda vacía o que no cumple `^[A-Za-z]{3}$` → `INVALID_CURRENCY_CODE`; normalizar la moneda a mayúsculas.
   - Cada error se guarda en un mapa posición → `QuoteException`, **sin cortar**. Los mensajes van en español, con el formato "Pedido N (Id X): …" del catálogo.
-- [ ] T025 [US1] En `FA/classes/OpportunityQuoteService.cls`, implementar la **etapa 3**: una sola consulta `SELECT Id, Amount, CurrencyIsoCode FROM Opportunity WHERE Id IN :ids WITH USER_MODE` sobre los Ids que pasaron la etapa 2. Id no devuelto → `OPPORTUNITY_NOT_FOUND` (mensaje "la Oportunidad indicada no existe", sin revelar si existe pero no es visible); `Amount == null` → `OPPORTUNITY_WITHOUT_AMOUNT` (depende de T024)
-- [ ] T026 [US1] En `FA/classes/OpportunityQuoteService.cls`, implementar las **etapas 4 y 5**:
+- [X] T025 [US1] En `FA/classes/OpportunityQuoteService.cls`, implementar la **etapa 3**: una sola consulta `SELECT Id, Amount, CurrencyIsoCode FROM Opportunity WHERE Id IN :ids WITH USER_MODE` sobre los Ids que pasaron la etapa 2. Id no devuelto → `OPPORTUNITY_NOT_FOUND` (mensaje "la Oportunidad indicada no existe", sin revelar si existe pero no es visible); `Amount == null` → `OPPORTUNITY_WITHOUT_AMOUNT` (depende de T024)
+- [X] T026 [US1] En `FA/classes/OpportunityQuoteService.cls`, implementar las **etapas 4 y 5**:
   - Juntar las `CurrencyIsoCode` distintas de los pedidos que siguen sin error y llamar **una vez** a `ExchangeRateClient.getRates(bases)`.
   - `isSupported = false` → `UNSUPPORTED_CURRENCY` (mensaje sobre la moneda **original**). Moneda destino igual a la base → tasa 1. Moneda destino ausente de `rates` → `UNSUPPORTED_CURRENCY` (mensaje sobre la moneda **destino**). Ver FR-006.
   - Si `getRates` lanza `ExchangeRateUnavailableException`, asignar ese error (500) a **cada** pedido que llegó a esta etapa.
   - Cálculo: `convertedAmount = (amount * rate).setScale(2, System.RoundingMode.DOWN)`; `quotedAt = RateTable.fetchedAt`; `rateDate = RateTable.rateDate`. Armar la lista de `QuoteResult` en el **mismo orden** que los pedidos (depende de T025)
-- [ ] T027 [US1] En `FA/classes/OpportunityQuoteService.cls`, implementar la **selección y el log del error**:
+- [X] T027 [US1] En `FA/classes/OpportunityQuoteService.cls`, implementar la **selección y el log del error**:
   - Si hay errores, tomar el de **menor posición**, loguearlo con `ErrorLogger.log` (source `SOURCE`, el channel recibido, código, status, mensaje, detalle técnico, contexto "Pedido N de M, Id recibido: …") y relanzarlo.
   - `relatedRecordId` se completa **solo** si el Id del pedido es un Id válido de Salesforce; si no, se deja vacío, porque el valor crudo ya está en `context`.
   - Envolver todo el método en `try/catch (Exception e)`: toda excepción que no sea `QuoteException` se loguea como `INTERNAL_ERROR` (500) y se relanza como `QuoteException`, con el mensaje genérico del catálogo y el stack trace en `technicalDetail`.
   - Se crea **exactamente un** `ErrorLog__c` por llamada rechazada (SC-009) (depende de T026)
-- [ ] T028 [US1] En `FA/classes/OpportunityQuoteService.cls`, implementar la **etapa 6 (guardado)**:
+- [X] T028 [US1] En `FA/classes/OpportunityQuoteService.cls`, implementar la **etapa 6 (guardado)**:
   - Solo si no hubo ningún error, armar un `CurrencyQuote__c` por cada `QuoteResult` (Opportunity__c, OriginalAmount__c, OriginalCurrency__c, TargetCurrency__c, ExchangeRate__c, ConvertedAmount__c, QuotedAt__c, RateDate__c y `Channel__c` = channel) e insertarlos en **un solo** `Database.insert(records, AccessLevel.USER_MODE)`, después de todos los callouts (regla 5).
   - Un `DmlException` se trata como `INTERNAL_ERROR` (lo cubre el catch de T027). Si hubo error, no se inserta nada (FR-010, FR-018).
   - Ningún DML sobre `Opportunity` (FR-019) (depende de T027, T010)
-- [ ] T029 [US1] Crear `OpportunityQuoteResource` en `FA/classes/OpportunityQuoteResource.cls` (`@RestResource(urlMapping='/v1/opportunity-quotes')`, `global with sharing`, `@HttpPost global static void quote()`):
+- [X] T029 [US1] Crear `OpportunityQuoteResource` en `FA/classes/OpportunityQuoteResource.cls` (`@RestResource(urlMapping='/v1/opportunity-quotes')`, `global with sharing`, `@HttpPost global static void quote()`):
   - Deserializar `RestContext.request.requestBody` a `QuoteModels.BatchRequest`. Un `JSONException` o `requests == null` → `INVALID_REQUEST_BODY`, logueado con `ErrorLogger` (canal ExternalSystem) y respuesta 400.
   - Llamar a `OpportunityQuoteService.quote(requests, CHANNEL_EXTERNAL)`.
   - Si sale bien: status 200 y body `BatchResponse`. Si hay `QuoteException`: status = `httpStatus` y body `ErrorResponse`. Siempre `Content-Type: application/json`.
   - Nunca incluir `technicalDetail` en la respuesta (FR-008) (depende de T028)
-- [ ] T030 [US1] Agregar `classAccesses` para `OpportunityQuoteResource` en `FA/permissionsets/OpportunityQuoteUser.permissionset-meta.xml` (depende de T029)
+- [X] T030 [US1] Agregar `classAccesses` para `OpportunityQuoteResource` en `FA/permissionsets/OpportunityQuoteUser.permissionset-meta.xml` (depende de T029)
 
 ### Tests for User Story 1
 
-- [ ] T031 [US1] Crear `OpportunityQuoteServiceTest` en `FA/classes/OpportunityQuoteServiceTest.cls`, siguiendo "Tests con callouts" (datos en `@TestSetup`, llamadas entre `Test.startTest()`/`Test.stopTest()`, `ExchangeRateCalloutMock` y `QuoteTestDataFactory`, nunca la API real). Debe cubrir:
+- [X] T031 [US1] Crear `OpportunityQuoteServiceTest` en `FA/classes/OpportunityQuoteServiceTest.cls`, siguiendo "Tests con callouts" (datos en `@TestSetup`, llamadas entre `Test.startTest()`/`Test.stopTest()`, `ExchangeRateCalloutMock` y `QuoteTestDataFactory`, nunca la API real). Debe cubrir:
   - Escenarios de aceptación: 10000 USD → EUR con tasa 0.87889 = 8788.90; lote de 3 en orden; Id inexistente; moneda destino no soportada (`XYZ`); moneda original no soportada (base 404, escenario 7); proveedor 500 y timeout; lote `[ok, Id inexistente, ok]` → `requestIndex` 2.
   - Casos borde: Amount null; moneda igual a la original → tasa 1; `eur` en minúsculas; `euro`; Id de otro objeto (por ejemplo, un Account); Id de 30 caracteres (el log se crea igual); lista vacía; 201 pedidos (con `OpportunityQuoteSettings.testOverride`); Id repetido → 2 resultados.
   - Truncado: un caso que termina en ,xx9 y otro con monto negativo.
@@ -159,14 +159,14 @@ separado.
   - Un solo callout para 200 pedidos en USD (`callCount == 1`).
   - Guardado: cada éxito crea exactamente una `CurrencyQuote__c` con los 8 datos y el `Channel__c` recibido; un lote rechazado crea **0** `CurrencyQuote__c` (también para los pedidos válidos) y **1** `ErrorLog__c`; un éxito no crea ningún `ErrorLog__c`.
   - La Oportunidad conserva su Amount y CurrencyIsoCode (SC-004) (depende de T028, T018, T019)
-- [ ] T032 [US1] Crear `OpportunityQuoteResourceTest` en `FA/classes/OpportunityQuoteResourceTest.cls` usando `RestContext.request`/`response` y siguiendo "Tests con callouts". Debe cubrir:
+- [X] T032 [US1] Crear `OpportunityQuoteResourceTest` en `FA/classes/OpportunityQuoteResourceTest.cls` usando `RestContext.request`/`response` y siguiendo "Tests con callouts". Debe cubrir:
   - 200 con el JSON exacto del contrato (nombres de propiedades, `quotedAt` ISO UTC).
   - 400 con `error.code`, `message`, `requestIndex`, `opportunityId`.
   - Body mal formado → 400 `INVALID_REQUEST_BODY`.
   - Proveedor caído → 500.
   - El body de error no contiene "Exception", "line" ni nombres de clase (SC-005).
   - Las cotizaciones creadas tienen `Channel__c = 'ExternalSystem'` (depende de T029)
-- [ ] T033 [US1] Desplegar y correr `sf apex run test --tests OpportunityQuoteServiceTest OpportunityQuoteResourceTest --code-coverage --wait 10 --target-org sdd-dev`. Después validar a mano con curl los casos 4.1 a 4.8 de [quickstart.md](./quickstart.md) y revisar que haya una `CurrencyQuote__c` por cada éxito y un `ErrorLog__c` por cada rechazo
+- [X] T033 [US1] Desplegar y correr `sf apex run test --tests OpportunityQuoteServiceTest OpportunityQuoteResourceTest --code-coverage --wait 10 --target-org sdd-dev`. Después validar a mano con curl los casos 4.1 a 4.8 de [quickstart.md](./quickstart.md) y revisar que haya una `CurrencyQuote__c` por cada éxito y un `ErrorLog__c` por cada rechazo
 
 **Checkpoint**: MVP funcional y alineado con la constitución. El sistema externo cotiza y cada cotización queda guardada.
 

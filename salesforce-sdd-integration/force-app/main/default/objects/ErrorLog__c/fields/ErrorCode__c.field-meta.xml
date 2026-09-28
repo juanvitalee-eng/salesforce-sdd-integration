@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ErrorCode__c</fullName>
+    <description>Código estable del error (por ejemplo, OPPORTUNITY_NOT_FOUND).</description>
+    <externalId>false</externalId>
+    <label>Código de error</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <length>60</length>
+    <unique>false</unique>
+</CustomField>

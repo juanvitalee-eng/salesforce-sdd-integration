@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BusinessMessage__c</fullName>
+    <description>Mensaje claro que recibió el llamador.</description>
+    <externalId>false</externalId>
+    <label>Mensaje de negocio</label>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <length>2000</length>
+    <visibleLines>3</visibleLines>
+</CustomField>

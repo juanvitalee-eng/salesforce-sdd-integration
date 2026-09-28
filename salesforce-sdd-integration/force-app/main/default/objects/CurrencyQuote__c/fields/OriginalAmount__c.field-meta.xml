@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>OriginalAmount__c</fullName>
+    <description>Monto de la Oportunidad al momento de cotizar, en su moneda original.</description>
+    <externalId>false</externalId>
+    <label>Monto original</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <precision>16</precision>
+    <scale>2</scale>
+    <unique>false</unique>
+</CustomField>

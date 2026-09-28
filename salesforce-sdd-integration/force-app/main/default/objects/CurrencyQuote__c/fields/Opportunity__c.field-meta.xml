@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Opportunity__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Oportunidad cotizada. Impide borrar la Oportunidad mientras tenga cotizaciones (FR-020a).</description>
+    <externalId>false</externalId>
+    <label>Oportunidad</label>
+    <referenceTo>Opportunity</referenceTo>
+    <relationshipLabel>Cotizaciones de Moneda</relationshipLabel>
+    <relationshipName>CurrencyQuotes</relationshipName>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

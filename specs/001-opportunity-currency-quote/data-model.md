@@ -63,7 +63,7 @@ operación rechazada con su mensaje de negocio y su detalle técnico. Solo visib
 | Label / Plural | Log de Errores / Logs de Errores |
 | Name | Auto Number `ERR-{000000}` |
 | Sharing (OWD) | Private |
-| Acceso | Ningún permission set de negocio. Se inserta en `SYSTEM_MODE` (research §6) |
+| Acceso | Ningún permission set de negocio. Se inserta en `SYSTEM_MODE` (research §6). Los administradores lo consultan con el permission set `ErrorLogAdmin` (lectura de todos los campos + View All), necesario porque los campos no requeridos no tienen FLS por defecto |
 
 | API Name | Label | Tipo | Req. | Descripción |
 |---|---|---|---|---|

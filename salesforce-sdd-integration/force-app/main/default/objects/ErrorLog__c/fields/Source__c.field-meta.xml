@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Source__c</fullName>
+    <description>Funcionalidad que generó el error (por ejemplo, "Cotizador de Oportunidades").</description>
+    <externalId>false</externalId>
+    <label>Funcionalidad de origen</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <length>80</length>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Context__c</fullName>
+    <description>Datos adicionales, por ejemplo "Pedido 2 de 3, Id recibido: ...".</description>
+    <externalId>false</externalId>
+    <label>Contexto</label>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <length>5000</length>
+    <visibleLines>3</visibleLines>
+</CustomField>

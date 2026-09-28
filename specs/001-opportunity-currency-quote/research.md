@@ -49,7 +49,11 @@ principal se otorga en el permission set `OpportunityQuoteUser`. El código llam
 Si en el futuro cambia el proveedor o se necesita una API key, solo se cambia la credencial, no el
 código.
 
-**Riesgo / plan B**: si el deploy rechaza el valor `NoAuthentication` en `authenticationProtocol`,
+**Resultado de la implementación (2026-09-28)**: la org rechazó `NoAuthentication` ("External
+Credentials don't support the NoAuthentication authentication protocol"). Se usa protocolo **`Custom`
+sin parámetros de autenticación**, que funciona igual para una API pública.
+
+**Riesgo / plan B original**: si el deploy rechaza el valor `NoAuthentication` en `authenticationProtocol`,
 crear la External Credential en Setup (Authentication Protocol: No Authentication), recuperarla con
 `sf project retrieve start --metadata ExternalCredential:FrankfurterNoAuth` y versionar ese XML.
 

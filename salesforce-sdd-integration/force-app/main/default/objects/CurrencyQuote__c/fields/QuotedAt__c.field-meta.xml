@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>QuotedAt__c</fullName>
+    <description>Momento en que el sistema obtuvo el tipo de cambio (UTC).</description>
+    <externalId>false</externalId>
+    <label>Fecha/hora de cotización</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>DateTime</type>
+</CustomField>

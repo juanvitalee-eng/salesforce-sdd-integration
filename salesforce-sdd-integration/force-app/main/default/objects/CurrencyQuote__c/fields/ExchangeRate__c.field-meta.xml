@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ExchangeRate__c</fullName>
+    <description>Tipo de cambio informado por el proveedor (1 moneda original = X moneda destino).</description>
+    <externalId>false</externalId>
+    <label>Tipo de cambio</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <precision>18</precision>
+    <scale>6</scale>
+    <unique>false</unique>
+</CustomField>

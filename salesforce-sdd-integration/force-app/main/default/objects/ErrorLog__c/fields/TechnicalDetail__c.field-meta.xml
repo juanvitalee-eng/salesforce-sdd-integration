@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TechnicalDetail__c</fullName>
+    <description>Detalle interno para diagnóstico (excepción, stack trace, respuesta del proveedor). Nunca se devuelve al llamador.</description>
+    <externalId>false</externalId>
+    <label>Detalle técnico</label>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>10</visibleLines>
+</CustomField>
